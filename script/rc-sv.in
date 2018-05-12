@@ -14,7 +14,7 @@ options:
   -a, --auto        Filter auto started daemons
   -A, --noauto      Filter manually started daemons
 
-<daemons> is a space separated list of script in @RCSVDIR@/sv.d
+<daemons> is a space separated list of script in @RCSVDIR@
 <action> can be a start, stop, restart, reload, status, ...
 WARNING: initscripts are free to implement or not the above actions.
 
@@ -85,7 +85,7 @@ for daemon; do
 done
 
 # going into script directory
-cd @RCSVDIR@/sv.d
+cd @RCSVDIR@
 
 case $action in
 	help)
@@ -126,7 +126,7 @@ case $action in
 			"TERM=$TERM")
 		cd /
 		for daemon in "${daemons[@]}"; do
-			env -i "${ENV[@]}" "@RCSVDIR@/sv.d/$daemon" "$action"
+			env -i "${ENV[@]}" "@RCSVDIR@/$daemon" "$action"
 			(( ret += !! $? ))  # clamp exit value to 0/1
 		done
 	;;

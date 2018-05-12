@@ -151,7 +151,7 @@ ck_daemon() {
 
 # Check if $1 is a valid daemon name
 have_daemon() {
-	[[ -f @RCSVDIR@/sv.d/$1 && -x @RCSVDIR@/sv.d/$1 ]]
+	[[ -f @RCSVDIR@/$1 && -x @RCSVDIR@/$1 ]]
 }
 
 # Check if $1 is started at boot
@@ -169,7 +169,7 @@ enable_auto(){
     if have_daemon "$sv"; then
         if [[ ! -e @RCDIR@/sysinit/$daemon ]];then
             stat_busy "Enable $sv autostart"
-            ln -s @RCSVDIR@/sv.d/$sv @RCDIR@/sysinit/$daemon || stat_die
+            ln -s @RCSVDIR@/$sv @RCDIR@/sysinit/$daemon || stat_die
             stat_done
         else
             stat_busy "$sv is already autostarted"
@@ -193,11 +193,11 @@ disable_auto(){
 }
 
 start_daemon() {
-	have_daemon "$1" && @RCSVDIR@/sv.d/"$1" start
+	have_daemon "$1" && @RCSVDIR@/"$1" start
 }
 
 stop_daemon() {
-	have_daemon "$1" && @RCSVDIR@/sv.d/"$1" stop
+	have_daemon "$1" && @RCSVDIR@/"$1" stop
 }
 
 # Status functions
