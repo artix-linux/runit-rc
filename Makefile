@@ -101,6 +101,7 @@ CHMODX = chmod +x
 EDIT = sed \
 	-e "s|@RCDIR[@]|$(RCDIR)|g" \
 	-e "s|@RCLIBDIR[@]|$(RCLIBDIR)|g" \
+	-e "s|@RCSVDIR[@]|$(RCSVDIR)|g" \
 	-e "s|@RCRUNDIR[@]|$(RCRUNDIR)|g"
 
 %: %.in Makefile
