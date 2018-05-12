@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. /usr/lib/rc/functions
+
+run_shutdown
