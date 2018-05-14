@@ -6,13 +6,13 @@
 case "$1" in
     start)
         stat_busy "Remounting root filesystem rw"
-        mount -o remount,rw /
+        mount -o remount,rw / || stat_die
         add_daemon remount-root
         stat_done
         ;;
     stop)
         stat_busy "Remounting root filesystem ro"
-        mount -o remount,ro /
+        mount -o remount,ro / || stat_die
         sync
         rm_daemon remount-root
         stat_done

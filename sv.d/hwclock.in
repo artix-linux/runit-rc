@@ -3,33 +3,24 @@
 . @RCLIBDIR@/functions
 
 HWCLOCK_PARAMS="--systz"
-HARDWARECLOCK=${HARDWARECLOCK:-'UTC'}
-
-[[ -f /etc/adjtime ]] && { read ; read ; read ADJTIME; } < /etc/adjtime
-
-if [[ $ADJTIME == 'LOCAL' ]]; then
-    if	[[ $HARDWARECLOCK == 'UTC' ]]; then
-        printf "${C_FAIL}/etc/rc.conf says the RTC is in UTC, but /etc/adjtime says it is in localtime.\n${C_OTHER}."
-    fi
-else
-    if [[ $HARDWARECLOCK == 'LOCALTIME' ]]; then
-        printf "${C_FAIL}/etc/rc.conf says the RTC is in localtime, but hwclock (/etc/adjtime) thinks it is in UTC.\n${C_OTHER}."
-    fi
-fi
+HARDWARECLOCK=${HARDWARECLOCK:-UTC}
 
 case $HARDWARECLOCK in
-    UTC) HWCLOCK_PARAMS+=" --utc --noadjfile";;
-    localtime) HWCLOCK_PARAMS+=" --localtime --noadjfile";;
+    UTC) HWCLOCK_PARAMS+=" --utc --noadjfile" ;;
+    localtime) HWCLOCK_PARAMS+=" --localtime --noadjfile" ;;
     *) HWCLOCK_PARAMS="";;
 esac
 
 case "$1" in
     start)
         hwclock $HWCLOCK_PARAMS || stat_die
-        add_daemon hwclock;;
+        add_daemon hwclock
+        stat_done
+        ;;
     stop)
-        hwclock --adjust $HWCLOCK_PARAMS
+        hwclock --adjust $HWCLOCK_PARAMS || stat_die
         rm_daemon hwclock
+        stat_done
         ;;
     restart)
         $0 stop
@@ -40,3 +31,4 @@ case "$1" in
         echo "usage: $0 {start|stop|restart}"
         ;;
 esac
+

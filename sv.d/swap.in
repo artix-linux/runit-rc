@@ -6,13 +6,13 @@
 case "$1" in
     start)
         stat_busy "Activating swap"
-        swapon -a
+        swapon -a || stat_die
         add_daemon swap
         stat_done
         ;;
     stop)
         stat_busy "Deactivating swap"
-        swapoff -a
+        swapoff -a || stat_die
         rm_daemon swap
         stat_done
         ;;
