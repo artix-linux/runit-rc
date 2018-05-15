@@ -3,6 +3,54 @@
 # sourcing our current rc.conf requires this to be a bash script
 . @RCLIBDIR@/functions
 
+# Check local filesystems
+fsck_all() {
+    if [[ -f /forcefsck ]] || in_array forcefsck $(< /proc/cmdline); then
+        FORCEFSCK="-f"
+    elif [[ -f /fastboot ]] || in_array fastboot $(< /proc/cmdline); then
+        return 0
+    elif [[ -e /run/initramfs/root-fsck ]]; then
+        IGNORE_MOUNTED="-M"
+    fi
+
+    fsck -A -T -C${FSCK_FD} -a -t no${NETFS//,/,no},noopts=_netdev ${IGNORE_MOUNTED} -- ${FORCEFSCK}
+}
+
+# Single-user login and/or automatic reboot after fsck (if needed)
+fsck_reboot() {
+    # $1 = exit code returned by fsck
+    # Ignore conditions 'FS errors corrected' and 'Cancelled by the user'
+    (( ($1 | 33) == 33 )) && return 0
+    if (( $1 & 2 )); then
+        echo
+        echo "********************** REBOOT REQUIRED *********************"
+        echo "*                                                          *"
+        echo "* The system will be rebooted automatically in 15 seconds. *"
+        echo "*                                                          *"
+        echo "************************************************************"
+        echo
+        sleep 15
+    else
+        echo
+        echo "*****************  FILESYSTEM CHECK FAILED  ****************"
+        echo "*                                                          *"
+        echo "*  Please repair manually and reboot. Note that the root   *"
+        echo "*  file system is currently mounted read-only. To remount  *"
+        echo "*  it read-write, type: mount -o remount,rw /              *"
+        echo "*  When you exit the maintenance shell, the system will    *"
+        echo "*  reboot automatically.                                   *"
+        echo "*                                                          *"
+        echo "************************************************************"
+        echo
+        sulogin -p
+    fi
+    echo "Automatic reboot in progress..."
+    umount -a
+    mount -o remount,ro /
+    reboot -f
+    exit 0
+}
+
 do_fsck(){
     if [[ -x $(type -P fsck) ]]; then
         fsck_all >|"${FSCK_OUT:-/dev/stdout}" 2>|"${FSCK_ERR:-/dev/stdout}"
