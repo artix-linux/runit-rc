@@ -15,6 +15,9 @@ do_unlock_device() {
 		open=luksOpen
 		a=$2
 		b=$1
+	else
+		printhl "Non-LUKS partitions are not supported at the moment."
+		continue
 	fi
 	if [[ $4 ]]; then
 		for i in ${4//,/ }; do
@@ -22,11 +25,14 @@ do_unlock_device() {
 				"discard") opts+="--allow-discard" ;;
 				"readonly"|"read-only") opts+="--readonly" ;;
 				"tries"*) opts+="-T ${i##*=}" ;;
-				# For now the swap lines are commented because
-				# there are LUKS-only option and plain (create)-only
-				# option.
-				# "swap") mkswap="y" ;;
-				# "cipher"*) opts+="-c ${i##*=}" ;;
+				"keyfile-size"*) opts+="-l ${i##*=}" ;;
+				"keyfile-offset"*) opts+="--keyfile-offset ${i##*=}" ;;
+				"key-slot"*) opts+="-S ${i##*=}" ;;
+				*)
+					printhl "The option is not currently supported at the moment."
+					printhl "Please add an issue to https://github.com/artix-linux/runit-rc"
+					continue
+				;;
 			esac
 		done
 	fi
@@ -73,13 +79,7 @@ do_unlock() {
 		return $?
 	fi
 
-	case $password in
-		ASK|SWAP)
-			do_unlock_device "$name" "$device" "$password" "$options"
-			;;
-		*)
-			do_unlock_device "$name" "$device" "$password" "$options"
-			;;
+	do_unlock_device "$name" "$device" "$password" "$options"
 	esac
 	failed=$?
 	if (( $failed )); then
