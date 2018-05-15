@@ -9,9 +9,9 @@ case "$1" in
         udevadm trigger --action=add --type=subsystems
         ret=$?
         udevadm trigger --action=add --type=devices
-        (( ret || $? )) && stat_die
+        (( ret || $? )) && stat_die udev-trigger
         add_daemon udev-trigger
-        stat_done
+        stat_done udev-trigger
         ;;
     *)
         echo "usage: $0 {start}"

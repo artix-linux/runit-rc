@@ -6,9 +6,9 @@
 case "$1" in
     start)
         stat_busy "Starting tmpfiles-setup"
-        tmpfiles --exclude-prefix=/dev --create --remove --boot || stat_die
+        tmpfiles --exclude-prefix=/dev --create --remove --boot || stat_die tmpfiles-setup
         add_daemon tmpfiles-setup
-        stat_done
+        stat_done tmpfiles-setup
         ;;
     *)
         echo "usage: $0 {start}"

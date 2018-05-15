@@ -6,9 +6,9 @@
 case "$1" in
     start)
         stat_busy "Loading sysctl settings"
-        sysctl --system || stat_die
+        sysctl --system || stat_die sysctl
         add_daemon sysctl
-        stat_done
+        stat_done sysctl
         ;;
     *)
         echo "usage: $0 {start}"

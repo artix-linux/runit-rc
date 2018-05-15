@@ -120,9 +120,9 @@ mount_cgs(){
 case "$1" in
     start)
         stat_busy "Mounting cgroups filesystem"
-        mount_cgs || stat_die
+        mount_cgs || stat_die cgroups
         add_daemon cgroups
-        stat_done
+        stat_done cgroups
         ;;
     *)
         echo "usage: $0 {start}"
