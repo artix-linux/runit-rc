@@ -6,15 +6,15 @@
 case "$1" in
     start)
         stat_busy "Starting udev daemon"
-        udevd --daemon || stat_die
+        udevd --daemon || stat_die udev
         add_daemon udev
-        stat_done
+        stat_done udev
         ;;
     stop)
         stat_busy "Stopping udev"
-        udevadm control --exit || stat_die
+        udevadm control --exit || stat_die udev
         rm_daemon udev
-        stat_done
+        stat_done udev
         ;;
     *)
         echo "usage: $0 {start|stop}"
