@@ -13,11 +13,13 @@ esac
 
 case "$1" in
     start)
+        stat_busy "Adjusting hwclock"
         hwclock $HWCLOCK_PARAMS || stat_die
         add_daemon hwclock
         stat_done
         ;;
     stop)
+        stat_busy "Adjusting hwclock"
         hwclock --adjust $HWCLOCK_PARAMS || stat_die
         rm_daemon hwclock
         stat_done
