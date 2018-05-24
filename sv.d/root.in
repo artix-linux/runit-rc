@@ -45,7 +45,7 @@ umount_fs() {
 
 case "$1" in
     start)
-        stat_busy "Mounting filesystema"
+        stat_busy "Mounting filesystems"
         mount_fs || stat_die root
         add_daemon root
         stat_done root
