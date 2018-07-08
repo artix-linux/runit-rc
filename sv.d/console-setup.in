@@ -17,6 +17,8 @@ config(){
     if [ -n "$KEYMAP" ]; then
         loadkeys -q -u ${KEYMAP}
     fi
+    # Set terminal encoding to UTF-8
+    printf "\033%s" "%G" >/dev/tty
 }
 
 case "$1" in
