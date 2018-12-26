@@ -72,7 +72,7 @@ do_unlock_device() {
 do_unlock() {
 	local name=$1 device=$2 password=$3 options=$4
 
-	printf "${C_MAIN}Unlocking $1${C_CLEAR}\n"
+	substat "Unlocking $1"
 
 	if [[ ${options:0:2} =~ -. ]]; then
 		do_unlock_device "$name" "$device" "$password" "$options"
@@ -80,7 +80,6 @@ do_unlock() {
 	fi
 
 	do_unlock_device "$name" "$device" "$password" "$options"
-	esac
 	failed=$?
 	if (( $failed )); then
 		printf "${C_FAIL}Unlocking of $1 failed.${C_CLEAR}\n"

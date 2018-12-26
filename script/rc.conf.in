@@ -26,3 +26,8 @@
 # /sys/fs/cgroup in hybrid or legacy mode
 
 # HAVE_CONTROLLER1_GROUPS="true"
+
+# Verbose mode
+# Set to "on" to enable details
+
+# VERBOSE="off"

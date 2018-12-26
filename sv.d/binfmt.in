@@ -13,6 +13,7 @@ mount_binfmt(){
         grep "^:" $path/* | \
             while read -r line; do
                 printf "%s" "$line" > /proc/sys/fs/binfmt_misc/register || return 1
+                ck_verbose && substat "Registered $line"
             done
     done
     return 0

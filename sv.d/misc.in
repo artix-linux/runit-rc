@@ -6,10 +6,13 @@
 # Check local filesystems
 fsck_all() {
     if [[ -f /forcefsck ]] || in_array forcefsck $(< /proc/cmdline); then
+        ck_verbose && substat "/forcefsck found, forcing fsck"
         FORCEFSCK="-f"
     elif [[ -f /fastboot ]] || in_array fastboot $(< /proc/cmdline); then
+        ck_verbose && substat "/fastboot found, canceling fsck"
         return 0
     elif [[ -e /run/initramfs/root-fsck ]]; then
+        ck_verbose && substat "Ignoring mounted filesystems in fsck"
         IGNORE_MOUNTED="-M"
     fi
 
@@ -44,7 +47,7 @@ fsck_reboot() {
         echo
         sulogin -p
     fi
-    echo "Automatic reboot in progress..."
+    echo "Automatic reboot in progress"
     umount -a
     mount -o remount,ro /
     reboot -f
@@ -62,8 +65,10 @@ do_fsck(){
 }
 
 kill_all(){
+    ck_verbose && substat "Killing processes using SIGTERM"
     pkill --inverse -s0,1 -TERM
     sleep 1
+    ck_verbose && substat "Killing processes using SIGKILL"
     pkill --inverse -s0,1 -KILL
 }
 

@@ -60,6 +60,14 @@ stat_busy() {
     printf "   ${C_OTHER}[${C_BUSY}busy${C_OTHER}]${C_CLEAR} "
 }
 
+substat() {
+    printf "    ${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
+}
+
+ck_verbose() {
+    [[ "$VERBOSE" == "on" ]]
+}
+
 ck_daemon() {
     [[ ! -f @RCRUNDIR@/started/$1 ]]
 }

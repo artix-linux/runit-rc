@@ -7,6 +7,8 @@ config(){
     if [[ -e /proc/sys/kernel/dmesg_restrict ]] &&
     (( $(< /proc/sys/kernel/dmesg_restrict) == 1 )); then
         install -Tm 0600 <( dmesg ) /var/log/dmesg.log
+        ck_verbose && substat "dmesg_restrict is enabled"
+        ck_verbose && substat "dmesg log can only be read by root"
     else
         install -Tm 0644 <( dmesg ) /var/log/dmesg.log
     fi
