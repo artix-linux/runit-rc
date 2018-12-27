@@ -5,10 +5,15 @@
 
 case "$1" in
     start)
-        stat_busy "Starting udev daemon"
-        udevd --daemon || stat_die udev
-        add_daemon udev
-        stat_done udev
+        # check if runit already runs udevd
+        if ! pgrep -f "runsv udevd" >/dev/null 2>&1; then
+            stat_busy "Starting udev daemon"
+            udevd --daemon || stat_die udev
+            # Note: This is only needed for initialization, udev will
+            #       be controlled by runit on stage 2.
+            add_daemon udev
+            stat_done udev
+        fi
         ;;
     stop)
         stat_busy "Stopping udev"
