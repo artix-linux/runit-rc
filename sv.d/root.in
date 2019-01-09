@@ -36,8 +36,18 @@ umount_fs() {
             mounts=("$target" "${mounts[@]}")
         done
 
-        if (( ${#mounts[*]} )); then
-            umount -r "${mounts[@]}" || return 1
+        # There are differences between verbose and non-verbose method
+        # because iterating the array is considerably slower than the
+        # non-verbose method
+        if ck_verbose; then
+            for ((i=0; i<${#mounts[@]}; i++)); do
+                substat "Unmounting ${mounts[i]}"
+                umount -r "${mounts[i]}" || return 1
+            done
+        else
+            if (( ${#mounts[*]} )); then
+                umount -r "${mounts[@]}" || return 1
+            fi
         fi
         return 0
     }
