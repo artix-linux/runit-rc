@@ -3,10 +3,12 @@
 # sourcing our current rc.conf requires this to be a bash script
 . @RCLIBDIR@/functions
 
+[[ "$VERBOSE" == "on" ]] && MOUNT_VERBOSE="-v"
+
 case "$1" in
     start)
         stat_busy "Starting mount-all"
-        mount -a -t "no${NETFS//,/,no}" -O no_netdev || stat_die mount-all
+        mount -a "${MOUNT_VERBOSE}" -t "no${NETFS//,/,no}" -O no_netdev || stat_die mount-all
         add_daemon mount-all
         stat_done mount-all
         ;;
