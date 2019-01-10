@@ -3,7 +3,7 @@
 # sourcing our current rc.conf requires this to be a bash script
 . @RCLIBDIR@/functions
 
-[[ "$VERBOSE" == "on" ]] && MOUNT_VERBOSE="-v"
+ck_verbose && MOUNT_VERBOSE="-v"
 
 case "$1" in
     start)
