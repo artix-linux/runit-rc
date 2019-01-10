@@ -61,7 +61,7 @@ stat_busy() {
 }
 
 substat() {
-    printf "    ${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
+    printf "    ${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
 }
 
 ck_verbose() {
