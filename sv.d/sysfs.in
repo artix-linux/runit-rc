@@ -4,12 +4,12 @@
 . @RCLIBDIR@/functions
 
 mount_sysfs(){
-    substat "Mounting /sys"
+    ck_verbose && substat "Mounting /sys"
     mountpoint -q /sys     || mount -t sysfs sys /sys -o nosuid,noexec,nodev
-    substat "Mounting /sys/kernel/security"
+    ck_verbose && substat "Mounting /sys/kernel/security"
     mountpoint -q /sys/kernel/security || mount -n -t securityfs securityfs /sys/kernel/security
     if [ -d /sys/firmware/efi ]; then
-        substat "Mounting /sys/firmware/efi"
+        ck_verbose && substat "Mounting /sys/firmware/efi"
         (mountpoint -q /sys/firmware/efi/efivars || mount -n -t efivarfs -o ro efivarfs /sys/firmware/efi/efivars)
     fi
 }

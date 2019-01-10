@@ -6,6 +6,7 @@
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 . /etc/profile.d/locale.sh
+. @RCDIR@/rc.conf
 
 # width:
 calc_columns () {
@@ -61,7 +62,7 @@ stat_busy() {
 }
 
 substat() {
-    printf "    ${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
+    printf "   ${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
 }
 
 ck_verbose() {

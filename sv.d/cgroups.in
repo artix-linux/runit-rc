@@ -2,7 +2,6 @@
 
 # sourcing our current rc.conf requires this to be a bash script
 . @RCLIBDIR@/functions
-. @RCDIR@/rc.conf
 
 CGROUP_OPTS=nodev,noexec,nosuid
 HAVE_CONTROLLER1_GROUPS=${HAVE_CONTROLLER1_GROUPS:-true}

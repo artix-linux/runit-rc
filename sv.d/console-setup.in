@@ -7,7 +7,7 @@ config(){
     [ -r /etc/vconsole.conf ] && . /etc/vconsole.conf
     TTYS=${TTYS:-6}
     _index=0
-    ck_verbose && substat "Setting font to ${FONT}"
+    ck_verbose && [ -n "$FONT" ] && substat "Setting font to ${FONT}"
     while [ ${_index} -le $TTYS ]; do
         if [ -n "$FONT" ]; then
             setfont ${FONT_MAP:+-m $FONT_MAP} ${FONT_UNIMAP:+-u $FONT_UNIMAP} \
