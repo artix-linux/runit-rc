@@ -69,6 +69,11 @@ kill_all(){
 
 case "$1" in
     start)
+        if [[ -x "/bin/btrfs" ]]; then
+            stat_busy "Activating btrfs devices"
+            btrfs device scan
+            stat_done
+        fi
         stat_busy "Checking filesystems"
         do_fsck
         add_daemon misc
