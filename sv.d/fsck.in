@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# sourcing our current rc.conf requires this to be a bash script
 . @RCLIBDIR@/functions
 
-# Check local filesystems
 fsck_all() {
     if [[ -f /forcefsck ]] || in_array forcefsck $(< /proc/cmdline); then
         FORCEFSCK="-f"
@@ -13,10 +11,9 @@ fsck_all() {
         IGNORE_MOUNTED="-M"
     fi
 
-    fsck -A -T -C${FSCK_FD} -a -t no${NETFS//,/,no},noopts=_netdev ${IGNORE_MOUNTED} -- ${FORCEFSCK}
+    fsck -A -T -a -t no${NETFS//,/,no},noopts=_netdev ${IGNORE_MOUNTED} ${FORCEFSCK}
 }
 
-# Single-user login and/or automatic reboot after fsck (if needed)
 fsck_reboot() {
     # $1 = exit code returned by fsck
     # Ignore conditions 'FS errors corrected' and 'Cancelled by the user'
@@ -44,14 +41,13 @@ fsck_reboot() {
         echo
         sulogin -p
     fi
-    echo "Automatic reboot in progress..."
+    echo "Automatic reboot in progress"
     umount -a
     mount -o remount,ro /
     reboot -f
-    exit 0
 }
 
-do_fsck(){
+do_fsck() {
     if [[ -x $(type -P fsck) ]]; then
         fsck_all >|"${FSCK_OUT:-/dev/stdout}" 2>|"${FSCK_ERR:-/dev/stdout}"
         declare -r fsckret=$?
@@ -61,27 +57,17 @@ do_fsck(){
     fsck_reboot $fsckret
 }
 
-kill_all(){
-    pkill --inverse -s0,1 -TERM
-    sleep 1
-    pkill --inverse -s0,1 -KILL
-}
-
 case "$1" in
     start)
+        stat_busy "Remounting rootfs to read-only"
+        mount -o remount,ro /
+        stat_done
         stat_busy "Checking filesystems"
         do_fsck
-        add_daemon misc
+        add_daemon fsck
         stat_done
-        ;;
-    stop)
-        stat_busy "Running kill-all"
-        kill_all
-        rm_daemon misc
-        stat_done
-        ;;
+    ;;
     *)
-        echo "usage: $0 {start|stop}"
-        exit 1
-        ;;
+        echo "usage: $0 {start}"
+    ;;
 esac

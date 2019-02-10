@@ -14,13 +14,13 @@ save_seed(){
 
 case "$1" in
     start)
-        stat_busy "Starting random-seed"
+        stat_busy "Initializing random seed"
         load_seed
         add_daemon random-seed
         stat_done
         ;;
     stop)
-        stat_busy "Stopping random-seed"
+        stat_busy "Saving random seed"
         save_seed
         rm_daemon random-seed
         stat_done

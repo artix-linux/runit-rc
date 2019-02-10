@@ -9,13 +9,13 @@ case "$1" in
         swapon -a || stat_die swap
         add_daemon swap
         stat_done swap
-        ;;
+    ;;
     stop)
         stat_busy "Deactivating swap"
-        swapoff -a || stat_die swap
+        swapoff -a
         rm_daemon swap
         stat_done swap
-        ;;
+    ;;
     *)
         echo "usage: $0 {start|stop}"
         exit 1

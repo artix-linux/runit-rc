@@ -16,34 +16,23 @@ RCBIN = \
 	script/modules-load
 
 RCSVD = \
-	sv.d/root \
-	sv.d/binfmt \
-	sv.d/bootlogd \
-	sv.d/cleanup \
-	sv.d/console-setup \
-	sv.d/dmesg \
-	sv.d/hostname \
-	sv.d/hwclock \
-	sv.d/kmod-static-nodes \
-	sv.d/misc \
-	sv.d/mount-all \
-	sv.d/net-lo \
-	sv.d/netfs \
-	sv.d/random-seed \
-	sv.d/remount-root \
-	sv.d/swap \
-	sv.d/sysctl \
-	sv.d/sysusers \
-	sv.d/tmpfiles-dev \
-	sv.d/tmpfiles-setup \
-	sv.d/udev \
-	sv.d/udev-trigger \
-	sv.d/udev-settle \
-	sv.d/modules \
-	sv.d/sysfs \
-	sv.d/devfs \
-	sv.d/procfs \
-	sv.d/cgroups
+    sv.d/binfmt \
+    sv.d/cgroups \
+    sv.d/cleanup \
+    sv.d/console-setup \
+    sv.d/fsck \
+    sv.d/hostname \
+    sv.d/hwclock \
+    sv.d/kmod-static-nodes \
+    sv.d/modules \
+    sv.d/mount-fs \
+    sv.d/net-lo \
+    sv.d/pseudofs \
+    sv.d/random-seed \
+    sv.d/swap \
+    sv.d/sysctl \
+    sv.d/tmpfiles-dev \
+    sv.d/udev
 
 # SYSINIT = \
 # 	01-sysfs \
@@ -131,42 +120,32 @@ install-rc:
 
 	install -d $(DESTDIR)$(RCDIR)/sysinit
 
-	$(LN) $(RCSVDIR)/sysfs $(DESTDIR)$(RCDIR)/sysinit/01-sysfs
-	$(LN) $(RCSVDIR)/procfs $(DESTDIR)$(RCDIR)/sysinit/02-procfs
-	$(LN) $(RCSVDIR)/devfs $(DESTDIR)$(RCDIR)/sysinit/03-devfs
-	$(LN) $(RCSVDIR)/cgroups $(DESTDIR)$(RCDIR)/sysinit/04-cgroups
-	$(LN) $(RCSVDIR)/root $(DESTDIR)$(RCDIR)/sysinit/05-root
-	$(LN) $(RCSVDIR)/hostname $(DESTDIR)$(RCDIR)/sysinit/10-hostname
+	$(LN) $(RCSVDIR)/pseudofs $(DESTDIR)$(RCDIR)/sysinit/01-pseudofs
+	$(LN) $(RCSVDIR)/cgroups $(DESTDIR)$(RCDIR)/sysinit/02-cgroups
+	$(LN) $(RCSVDIR)/kmod-static-nodes $(DESTDIR)$(RCDIR)/sysinit/03-kmod-static-nodes
+	$(LN) $(RCSVDIR)/modules $(DESTDIR)$(RCDIR)/sysinit/04-modules
+	$(LN) $(RCSVDIR)/tmpfiles-dev $(DESTDIR)$(RCDIR)/sysinit/05-tmpfiles-dev
+	$(LN) $(RCSVDIR)/udev $(DESTDIR)$(RCDIR)/sysinit/06-udev
+	$(LN) $(RCSVDIR)/console-setup $(DESTDIR)$(RCDIR)/sysinit/10-console-setup
 	$(LN) $(RCSVDIR)/hwclock $(DESTDIR)$(RCDIR)/sysinit/15-hwclock
-	$(LN) $(RCSVDIR)/kmod-static-nodes $(DESTDIR)$(RCDIR)/sysinit/20-kmod-static-nodes
-	$(LN) $(RCSVDIR)/tmpfiles-dev $(DESTDIR)$(RCDIR)/sysinit/25-tmpfiles-dev
-	$(LN) $(RCSVDIR)/udev $(DESTDIR)$(RCDIR)/sysinit/30-udev
-	$(LN) $(RCSVDIR)/udev-trigger $(DESTDIR)$(RCDIR)/sysinit/31-udev-trigger
-	$(LN) $(RCSVDIR)/modules $(DESTDIR)$(RCDIR)/sysinit/32-modules
-	$(LN) $(RCSVDIR)/udev-settle $(DESTDIR)$(RCDIR)/sysinit/33-udev-settle
-	$(LN) $(RCSVDIR)/console-setup $(DESTDIR)$(RCDIR)/sysinit/40-console-setup
-	$(LN) $(RCSVDIR)/net-lo $(DESTDIR)$(RCDIR)/sysinit/45-net-lo
-	$(LN) $(RCSVDIR)/misc $(DESTDIR)$(RCDIR)/sysinit/50-misc
-	$(LN) $(RCSVDIR)/remount-root $(DESTDIR)$(RCDIR)/sysinit/55-remount-root
-	$(LN) $(RCSVDIR)/mount-all $(DESTDIR)$(RCDIR)/sysinit/60-mount-all
-	$(LN) $(RCSVDIR)/swap $(DESTDIR)$(RCDIR)/sysinit/65-swap
-	$(LN) $(RCSVDIR)/random-seed $(DESTDIR)$(RCDIR)/sysinit/70-random-seed
-	$(LN) $(RCSVDIR)/tmpfiles-setup $(DESTDIR)$(RCDIR)/sysinit/75-tmpfiles-setup
-	$(LN) $(RCSVDIR)/sysusers $(DESTDIR)$(RCDIR)/sysinit/80-sysusers
-	$(LN) $(RCSVDIR)/dmesg $(DESTDIR)$(RCDIR)/sysinit/85-dmesg
-	$(LN) $(RCSVDIR)/sysctl $(DESTDIR)$(RCDIR)/sysinit/90-sysctl
-	$(LN) $(RCSVDIR)/binfmt $(DESTDIR)$(RCDIR)/sysinit/95-binfmt
+	$(LN) $(RCSVDIR)/fsck $(DESTDIR)$(RCDIR)/sysinit/20-fsck
+	$(LN) $(RCSVDIR)/mount-fs $(DESTDIR)$(RCDIR)/sysinit/30-mount-fs
+	$(LN) $(RCSVDIR)/swap $(DESTDIR)$(RCDIR)/sysinit/31-swap
+	$(LN) $(RCSVDIR)/random-seed $(DESTDIR)$(RCDIR)/sysinit/40-modules
+	$(LN) $(RCSVDIR)/net-lo $(DESTDIR)$(RCDIR)/sysinit/41-net-lo
+	$(LN) $(RCSVDIR)/hostname $(DESTDIR)$(RCDIR)/sysinit/42-hostname
+	$(LN) $(RCSVDIR)/sysctl $(DESTDIR)$(RCDIR)/sysinit/55-sysctl
+	$(LN) $(RCSVDIR)/binfmt $(DESTDIR)$(RCDIR)/sysinit/90-binfmt
 	$(LN) $(RCSVDIR)/cleanup $(DESTDIR)$(RCDIR)/sysinit/99-cleanup
 
 	install -d $(DESTDIR)$(RCDIR)/shutdown
 
 	$(LN) $(RCSVDIR)/random-seed $(DESTDIR)$(RCDIR)/shutdown/10-random-seed
-	$(LN) $(RCSVDIR)/cleanup $(DESTDIR)$(RCDIR)/shutdown/20-cleanup
+	$(LN) $(RCSVDIR)/hwclock $(DESTDIR)$(RCDIR)/shutdown/15-hwclock
 	$(LN) $(RCSVDIR)/udev $(DESTDIR)$(RCDIR)/shutdown/30-udev
-	$(LN) $(RCSVDIR)/misc $(DESTDIR)$(RCDIR)/shutdown/40-misc
+	$(LN) $(RCSVDIR)/cleanup $(DESTDIR)$(RCDIR)/shutdown/20-cleanup
 	$(LN) $(RCSVDIR)/swap $(DESTDIR)$(RCDIR)/shutdown/50-swap
-	$(LN) $(RCSVDIR)/root $(DESTDIR)$(RCDIR)/shutdown/60-root
-	$(LN) $(RCSVDIR)/remount-root $(DESTDIR)$(RCDIR)/shutdown/70-remount-root
+	$(LN) $(RCSVDIR)/mount-fs $(DESTDIR)$(RCDIR)/shutdown/60-mount-fs
 
 	install -d $(DESTDIR)$(MANDIR)/man8
 	install -m644 script/modules-load.8 $(DESTDIR)$(MANDIR)/man8

@@ -13,13 +13,13 @@ esac
 
 case "$1" in
     start)
-        stat_busy "Adjusting hwclock"
+        stat_busy "Adjusting hwclock to ${HARDWARECLOCK}"
         hwclock $HWCLOCK_PARAMS || stat_die
         add_daemon hwclock
         stat_done
         ;;
     stop)
-        stat_busy "Adjusting hwclock"
+        stat_busy "Adjusting hwclock to ${HARDWARECLOCK}"
         hwclock --adjust $HWCLOCK_PARAMS || stat_die
         rm_daemon hwclock
         stat_done
@@ -33,4 +33,3 @@ case "$1" in
         echo "usage: $0 {start|stop|restart}"
         ;;
 esac
-

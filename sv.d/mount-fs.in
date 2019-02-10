@@ -1,0 +1,27 @@
+#!/bin/bash
+
+. @RCLIBDIR@/functions
+
+case "$1" in
+    start)
+        stat_busy "Mounting / read-write"
+        mount -o remount,rw / || stat_die mount-fs
+        stat_done
+        stat_busy "Mounting all non-network filesystems"
+        mount -a -t "nosysfs,nonfs,nonfs4,nosmbfs,nocifs" -O no_netdev || stat_die mount-fs
+        add_daemon mount-fs
+        stat_done
+    ;;
+    stop)
+        stat_busy "Unmounting filesystems"
+        umount -r -a -t nosysfs,noproc,nodevtmpfs,notmpfs
+        stat_done
+        stat_busy "Remounting / read-only"
+        mount -o remount,ro /
+        stat_done
+        sync
+    ;;
+    *)
+        echo "usage: $0 {start|stop}"
+    ;;
+esac

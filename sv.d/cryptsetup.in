@@ -1,7 +1,6 @@
 #!/bin/bash
 
 . @RCLIBDIR@/functions
-
 do_unlock_device() {
 	# $1 = requested name
 	# $2 = source device
@@ -17,7 +16,7 @@ do_unlock_device() {
 		b=$1
 	else
 		printhl "Non-LUKS partitions are not supported at the moment."
-		continue
+		return 1
 	fi
 	if [[ $4 ]]; then
 		for i in ${4//,/ }; do
@@ -29,9 +28,10 @@ do_unlock_device() {
 				"keyfile-offset"*) opts+="--keyfile-offset ${i##*=}" ;;
 				"key-slot"*) opts+="-S ${i##*=}" ;;
 				*)
-					printhl "The option is not currently supported at the moment."
+					printhl "The option '${i%%=*}' is not currently supported at the moment."
+					printhl "Partition '$2' cannot be unlocked."
 					printhl "Please add an issue to https://github.com/artix-linux/runit-rc"
-					continue
+					return 1
 				;;
 			esac
 		done
@@ -80,7 +80,6 @@ do_unlock() {
 	fi
 
 	do_unlock_device "$name" "$device" "$password" "$options"
-	esac
 	failed=$?
 	if (( $failed )); then
 		printf "${C_FAIL}Unlocking of $1 failed.${C_CLEAR}\n"
@@ -90,7 +89,9 @@ do_unlock() {
 
 do_lock() {
 	#status "Detaching encrypted device ${1}"
-	cryptsetup luksClose "$1" >/dev/null
+	for v in $(dmsetup ls --target crypt --exec "dmsetup info -c --noheadings -o open,name"); do
+		[ ${v%%:*} = "0" ] && cryptsetup --debug close ${v##*:}
+	done
 }
 
 read_crypttab() {
@@ -113,16 +114,24 @@ case "$1" in
         stat_busy "Starting encrypted devices"
         read_crypttab do_unlock
         rc=$?
-        vgchange --sysinit -a y >/dev/null
+        # [[ -f /run/sv.d/started/lvm2 ]] && vgchange --sysinit -a y >/dev/null
+        # Using the above, $? will return >0, which results in stat_die.
+        if [[ -f /run/sv.d/started/lvm2 ]]; then
+            vgchange --sysinit -a y >/dev/null
+        fi
         (( rc || $? )) && stat_die
         add_daemon cryptsetup
         stat_done
         ;;
     stop)
         stat_busy "Stopping encrypted devices"
-        vgchange --sysinit -a n &>/dev/null
+        #[[ -f /run/sv.d/started/lvm2 ]] && vgchange --sysinit -a n &>/dev/null
+        # Using the above, $? will return >0, which results in stat_die.
+        if [[ -f /run/sv.d/started/lvm2 ]]; then
+            vgchange --sysinit -a y >/dev/null
+        fi
         rc=$?
-        read_crypttab do_lock
+        do_lock
         (( rc || $? )) && stat_die
         rm_daemon cryptsetup
         stat_done

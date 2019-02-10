@@ -5,25 +5,24 @@
 
 case "$1" in
     start)
-        # check if runit already runs udevd
-        if ! pgrep -f "runsv udevd" >/dev/null 2>&1; then
-            stat_busy "Starting udev daemon"
-            udevd --daemon || stat_die udev
-            # Note: This is only needed for initialization, udev will
-            #       be controlled by runit on stage 2.
-            add_daemon udev
-            stat_done udev
+        if ! pgrep -f "runsv udevd" >/dev/null; then
+            stat_busy "Starting udev and waiting for devices to settle"
+            udevd --daemon
+            udevadm trigger --action=add --type=subsystems
+            udevadm trigger --action=add --type=devices
+            udevadm settle
+            stat_done
         fi
-        ;;
+        add_daemon udev
+    ;;
     stop)
         stat_busy "Stopping udev"
         udevadm control --exit || stat_die udev
         rm_daemon udev
         stat_done udev
-        ;;
+    ;;
     *)
         echo "usage: $0 {start|stop}"
         exit 1
-        ;;
+    ;;
 esac
-

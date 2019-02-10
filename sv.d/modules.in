@@ -4,12 +4,11 @@
 . @RCLIBDIR@/functions
 
 load_modules() {
-	local rc=0
+    local rc=0
+    /usr/bin/modules-load
+    (( rc+= $? ))
 
-	/usr/bin/modules-load
-	(( rc+=$? ))
-
-	return $rc
+    return $rc
 }
 
 case "$1" in
@@ -24,4 +23,3 @@ case "$1" in
         exit 1
         ;;
 esac
-

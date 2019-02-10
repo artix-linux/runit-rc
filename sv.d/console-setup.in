@@ -22,7 +22,7 @@ config(){
 
 case "$1" in
     start)
-        stat_busy "Starting console-setup"
+        stat_busy "Setting up console fonts and keymaps"
         config
         add_daemon console-setup
         stat_done
@@ -32,3 +32,4 @@ case "$1" in
         exit 1
         ;;
 esac
+
