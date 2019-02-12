@@ -28,7 +28,6 @@ RCSVD = \
 	sv.d/misc \
 	sv.d/mount-all \
 	sv.d/net-lo \
-	sv.d/netfs \
 	sv.d/random-seed \
 	sv.d/remount-root \
 	sv.d/swap \
