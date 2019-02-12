@@ -13,7 +13,7 @@ fsck_all() {
         IGNORE_MOUNTED="-M"
     fi
 
-    fsck -A -T -C${FSCK_FD} -a -t no${NETFS//,/,no},noopts=_netdev ${IGNORE_MOUNTED} -- ${FORCEFSCK}
+    fsck -A -T -M -C${FSCK_FD} -a -t no${NETFS//,/,no},noopts=_netdev ${IGNORE_MOUNTED} -- ${FORCEFSCK}
 }
 
 # Single-user login and/or automatic reboot after fsck (if needed)
