@@ -13,6 +13,7 @@ cleaning(){
     fi
 
     rm -f /etc/nologin /forcefsck /forcequotacheck /fastboot
+    [ "$CLEANTMP" == "yes" ] && rm -rf /tmp/*
 }
 
 case "$1" in
