@@ -13,7 +13,7 @@ cleaning(){
     fi
 
     rm -f /etc/nologin /forcefsck /forcequotacheck /fastboot
-    [ "$CLEANTMP" == "yes" ] && rm -rf /tmp/*
+    [ "$CLEANTMP" == "yes" ] && find /tmp -maxdepth 1 -name '[!ajlq\.]*' -exec rm -rf -- {} +
 }
 
 case "$1" in
