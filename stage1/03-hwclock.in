@@ -1,0 +1,10 @@
+HWCLOCK_PARAMS="--systz"
+HARDWARECLOCK=${HARDWARECLOCK:-UTC}
+
+case $HARDWARECLOCK in
+    UTC) HWCLOCK_PARAMS+=" --utc --noadjfile" ;;
+    localtime) HWCLOCK_PARAMS+=" --localtime --noadjfile" ;;
+    *) HWCLOCK_PARAMS="" ;;
+esac
+
+hwclock $HWCLOCK_PARAMS || emergency_shell

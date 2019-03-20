@@ -1,0 +1,14 @@
+[ -f /forcefsck ] && FORCEFSCK="-f"
+[ -f /fastboot ] && return 0
+
+for arg in $(< /proc/cmdline); do
+	case $arg in
+		fastboot) return 0 ;;
+		forcefsck) FORCEFSCK="-f" ;;
+	esac
+done
+
+msg "Checking filesystems"
+fsck -A -T -a -t no${NET_FS//,/,no},noopts=_netdev $FORCEFSCK
+fsckret=$?
+fsck_reboot $fsckret

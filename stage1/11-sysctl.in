@@ -1,0 +1,2 @@
+msg "Loading sysctl settings"
+sysctl --system

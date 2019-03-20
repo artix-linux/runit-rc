@@ -1,0 +1,6 @@
+msg "Starting udev"
+udevd --daemon
+udevadm trigger --action=add --type=subsystems
+udevadm trigger --action=add --type=devices
+msg "Waiting for udev uevents to be processed"
+udevadm settle

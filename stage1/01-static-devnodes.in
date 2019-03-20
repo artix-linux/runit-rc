@@ -1,0 +1,4 @@
+# The generated file will be run by the next script
+[[ -d /run/tmpfiles.d ]] || mkdir /run/tmpfiles.d
+kmod static-nodes --format=tmpfiles --output=/run/tmpfiles.d/kmod.conf
+	tmpfiles --prefix=/dev --create --boot || emergency_shell

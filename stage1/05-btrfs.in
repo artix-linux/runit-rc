@@ -1,0 +1,2 @@
+msg "Activating btrfs devices"
+btrfs device scan || emergency_shell

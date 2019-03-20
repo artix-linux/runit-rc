@@ -1,0 +1,8 @@
+msg "Remounting root read-write"
+mount -o remount,rw / || emergency_shell
+
+msg "Mounting filesystems"
+mount -a -t "no${NETFS//,/,no}" -O no_netdev || emergency_shell
+
+msg "Mounting swap"
+swapon -a || emergency_shell

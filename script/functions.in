@@ -41,6 +41,187 @@ calc_columns () {
     fi
 }
 
+### Long functions to be run in stages
+
+# Check local filesystems
+fsck_all() {
+    if [[ -f /forcefsck ]] || in_array forcefsck $(< /proc/cmdline); then
+        FORCEFSCK="-f"
+    elif [[ -f /fastboot ]] || in_array fastboot $(< /proc/cmdline); then
+        return 0
+    elif [[ -e /run/initramfs/root-fsck ]]; then
+        IGNORE_MOUNTED="-M"
+    fi
+
+    fsck -A -T -C${FSCK_FD} -a -t no${NETFS//,/,no},noopts=_netdev ${IGNORE_MOUNTED} -- ${FORCEFSCK}
+}
+
+# Single-user login and/or automatic reboot after fsck (if needed)
+fsck_reboot() {
+    # $1 = exit code returned by fsck
+    # Ignore conditions 'FS errors corrected' and 'Cancelled by the user'
+    (( ($1 | 33) == 33 )) && return 0
+    if (( $1 & 2 )); then
+        echo
+        echo "********************** REBOOT REQUIRED *********************"
+        echo "*                                                          *"
+        echo "* The system will be rebooted automatically in 15 seconds. *"
+        echo "*                                                          *"
+        echo "************************************************************"
+        echo
+        sleep 15
+    else
+        echo
+        echo "*****************  FILESYSTEM CHECK FAILED  ****************"
+        echo "*                                                          *"
+        echo "*  Please repair manually and reboot. Note that the root   *"
+        echo "*  file system is currently mounted read-only. To remount  *"
+        echo "*  it read-write, type: mount -o remount,rw /              *"
+        echo "*  When you exit the maintenance shell, the system will    *"
+        echo "*  reboot automatically.                                   *"
+        echo "*                                                          *"
+        echo "************************************************************"
+        echo
+        emergency_shell
+    fi
+    echo "Automatic reboot in progress..."
+    umount -a
+    mount -o remount,ro /
+    reboot -f
+    exit 0
+}
+
+do_fsck(){
+    if [[ -x $(type -P fsck) ]]; then
+        fsck_all >|"${FSCK_OUT:-/dev/stdout}" 2>|"${FSCK_ERR:-/dev/stdout}"
+        declare -r fsckret=$?
+    else
+        declare -r fsckret=0
+    fi
+    fsck_reboot $fsckret
+}
+
+CGROUP_OPTS=nodev,noexec,nosuid
+HAVE_CONTROLLER1_GROUPS=${HAVE_CONTROLLER1_GROUPS:-true}
+CGROUP_MODE=${CGROUP_MODE:-hybrid}
+CGROUP_CONTROLLERS=""
+
+cgroup2_find_path(){
+    if grep -qw cgroup2 /proc/filesystems; then
+        case "${CGROUP_MODE}" in
+            hybrid) printf "/sys/fs/cgroup/unified" ;;
+            unified) printf "/sys/fs/cgroup" ;;
+        esac
+    fi
+    return 0
+}
+
+cgroup1_base(){
+    grep -qw cgroup /proc/filesystems || return 0
+    if ! mountpoint -q /sys/fs/cgroup; then
+        local opts="${CGROUP_OPTS},mode=755,size=${rc_cgroupsize:-10m}"
+        mount -n -t tmpfs -o "${opts}" cgroup_root /sys/fs/cgroup
+    fi
+
+    if ! mountpoint -q /sys/fs/cgroup/openrc; then
+        local agent="@RCLIBDIR@/cgroup-release-agent"
+        mkdir /sys/fs/cgroup/openrc
+        mount -n -t cgroup -o none,${CGROUP_OPTS},name=openrc,release_agent="$agent" openrc /sys/fs/cgroup/openrc
+        printf 1 > /sys/fs/cgroup/openrc/notify_on_release
+    fi
+    return 0
+}
+
+cgroup1_controllers(){
+    ${HAVE_CONTROLLER1_GROUPS} && [ -e /proc/cgroups ]  && grep -qw cgroup /proc/filesystems || return 0
+    while read -r name _ _ enabled _; do
+        case "${enabled}" in
+            1)	if mountpoint -q "/sys/fs/cgroup/${name}";then continue;fi
+                local x
+                for x in $CGROUP_CONTROLLERS; do
+                    [ "${name}" = "blkio" ] && [ "${x}" = "io" ] &&
+                        continue 2
+                    [ "${name}" = "${x}" ] &&
+                    continue 2
+                done
+                mkdir "/sys/fs/cgroup/${name}"
+                mount -n -t cgroup -o "${CGROUP_OPTS},${name}" "${name}" "/sys/fs/cgroup/${name}"
+            ;;
+        esac
+    done < /proc/cgroups
+    return 0
+}
+
+cgroup2_base(){
+    grep -qw cgroup2 /proc/filesystems || return 0
+    local base
+    base="$(cgroup2_find_path)"
+    mkdir -p "${base}"
+    mount -t cgroup2 none -o "${CGROUP_OPTS},nsdelegate" "${base}" 2> /dev/null ||
+        mount -t cgroup2 none -o "${CGROUP_OPTS}" "${base}"
+    return 0
+}
+
+cgroup2_controllers(){
+    grep -qw cgroup2 /proc/filesystems || return 0
+    local active cgroup_path x y
+    cgroup_path="$(cgroup2_find_path)"
+    [ -z "${cgroup_path}" ] && return 0
+    [ -e "${cgroup_path}/cgroup.controllers" ] && read -r active < "${cgroup_path}/cgroup.controllers"
+    for x in ${CGROUP_CONTROLLERS}; do
+        for y in ${active}; do
+            [ "$x" = "$y" ] && [ -e "${cgroup_path}/cgroup.subtree_control" ] &&
+            echo "+${x}"  > "${cgroup_path}/cgroup.subtree_control"
+        done
+    done
+    return 0
+}
+
+cgroups_hybrid(){
+    cgroup1_base
+    cgroup2_base
+    cgroup2_controllers
+    cgroup1_controllers
+    return 0
+}
+
+cgroups_legacy(){
+    cgroup1_base
+    cgroup1_controllers
+    return 0
+}
+
+cgroups_unified(){
+    cgroup2_base
+    cgroup2_controllers
+    return 0
+}
+
+mount_cgroups(){
+    case "${CGROUP_MODE}" in
+        hybrid) cgroups_hybrid ;;
+        legacy) cgroups_legacy ;;
+        unified) cgroups_unified ;;
+    esac
+    return 0
+}
+
+mount_cgs(){
+    if [ -d /sys/fs/cgroup ];then
+        mount_cgroups
+        return 0
+    fi
+}
+
+### End
+
+emergency_shell()
+{
+	msg_error "Cannot continue due to errors above, starting emergency shell."
+	msg "When ready, type exit or Control+D to continue booting."
+	sulogin -p
+}
+
 deltext() {
     printf "${DEL_TEXT}"
 }
@@ -53,93 +234,29 @@ printsep() {
     printf "\n${C_SEPARATOR}   ------------------------------\n"
 }
 
-stat_busy() {
-    printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
-    printf "${SAVE_POSITION}"
-    deltext
-    printf "   ${C_OTHER}[${C_BUSY}busy${C_OTHER}]${C_CLEAR} "
+msg() {
+	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
 }
 
-ck_daemon() {
-    [[ ! -f @RCRUNDIR@/started/$1 ]]
+msg_warn() {
+	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
 }
 
-ck_failed() {
-    [[ ! -f @RCRUNDIR@/failed/$1 ]]
+msg_error() {
+	printf "${C_FAIL}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
+}
+
+daemon_active() {
+	[[ -f @RCRUNDIR@/up/$1 ]]
 }
 
 add_daemon() {
-    [[ -d @RCRUNDIR@/started ]] || mkdir -p @RCRUNDIR@/started
-    >| @RCRUNDIR@/started/"$1"
+	[[ -d @RCRUNDIR@/up ]] || mkdir -p @RUNRCDIR@/up
+	touch @RCRUNDIR@/up/"$1"
 }
 
 rm_daemon() {
-    rm -f @RCRUNDIR@/started/"$1"
-}
-
-add_failed() {
-    [[ -d @RCRUNDIR@/failed ]] || mkdir -p @RCRUNDIR@/failed
-    >| @RCRUNDIR@/failed/"$1"
-}
-
-rm_failed() {
-    rm -f @RCRUNDIR@/failed/"$1"
-}
-
-ck_status() {
-    if ! ck_daemon "$1"; then
-        stat_started
-    else
-        if ! ck_failed "$1"; then
-            stat_failed
-        else
-            stat_stopped
-        fi
-    fi
-}
-
-stat_done() {
-    if ! ck_failed "$1"; then
-        rm_failed "$1"
-    fi
-    deltext
-    printf "   ${C_OTHER}[${C_DONE}done${C_OTHER}]${C_CLEAR} \n"
-}
-
-stat_fail() {
-    deltext
-    printf "   ${C_OTHER}[${C_FAIL}fail${C_OTHER}]${C_CLEAR} \n"
-}
-
-stat_die() {
-    if ck_failed "$1"; then
-        add_failed "$1"
-    fi
-    stat_fail
-    exit ${2:-1}
-}
-
-status() {
-    local quiet
-    case $1 in
-        -q)
-            quiet=1
-            ;;&
-        -v)
-            # NOOP: supported for backwards compat
-            shift
-            ;;
-    esac
-    stat_busy "$1"
-    shift
-    if (( quiet )); then
-        "$@" &>/dev/null
-    else
-        "$@"
-    fi
-    local ret=$?
-    (( ret == 0 )) && stat_done || stat_fail
-    return $ret
+	rm -f @RCRUNDIR@/up/"$1"
 }
 
 #  usage : in_array( $needle, $haystack )
@@ -168,26 +285,8 @@ print_leave(){
     # avoid staircase effect
     stty onlcr
     echo " "
-    printhl "Initiating shutdown\n"
+    printhl "Shutting down\n"
     echo " "
-}
-
-run_sysinit(){
-    # Prints distro name and URL
-    print_welcome
-    calc_columns
-
-    for service in ${RC_SYSINIT[@]};do
-        @RCSVDIR@/"${service#*-}" start
-    done
-}
-
-run_shutdown(){
-    print_leave
-
-    for service in ${RC_SHUTDOWN[@]};do
-        @RCSVDIR@/"${service#*-}" stop
-    done
 }
 
 # if [[ $1 == "start" ]]; then
@@ -224,10 +323,10 @@ if [[ $USECOLOR != [nN][oO] ]]; then
         C_OTHER=${C_MAIN}$(tput setaf 4)     # prefix & brackets
         C_SEPARATOR=${C_MAIN}$(tput setaf 0) # separator
         C_BUSY=${C_CLEAR}$(tput setaf 6)     # busy
-        C_FAIL=${C_MAIN}$(tput setaf 5)      # failed
+        C_FAIL=${C_MAIN}$(tput setaf 1)      # failed
+        C_WARN=${C_MAIN}$(tput setaf 3)      # warning
         C_DONE=${C_MAIN}                     # completed
-        C_STOP=${C_MAIN}$(tput setaf 1)      # backgrounded
-        C_START=${C_MAIN}$(tput setaf 2)   # started
+        C_START=${C_MAIN}$(tput setaf 2)     # started
         C_H1=${C_MAIN}                       # highlight text 1
         C_H2=${C_MAIN}$(tput setaf 6)        # highlight text 2
     else
@@ -249,6 +348,3 @@ fi
 
 PREFIX_REG="::"
 PREFIX_HL=" >"
-
-RC_SYSINIT=$(ls @RCDIR@/sysinit)
-RC_SHUTDOWN=$(ls @RCDIR@/shutdown)

@@ -1,0 +1,25 @@
+do_prestart()
+{
+	msg "Checking if network is available"
+	if [ -z "$NETMANAGER" ]; then
+		msg_error
+	fi
+}
+
+
+do_start()
+{
+	mount -a -t "$NETFS" || exit 1
+	mount -a -O _netdev || exit 1
+}
+
+do_stop()
+{
+	umount -a -f -t "$NETFS"
+	ret=$?
+	[ $ret != 0 ] && umount -a -f -l -t "$NETFS"
+
+	umount -a -f -O _netdev
+	ret=$?
+	[ $ret != 0 ] && umount -a -f -l -O _netdev
+}

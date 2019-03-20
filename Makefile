@@ -15,34 +15,24 @@ RCBIN = \
 	script/rc-sv \
 	script/modules-load
 
-RCSVD = \
-	sv.d/root \
-	sv.d/binfmt \
-	sv.d/bootlogd \
-	sv.d/cleanup \
-	sv.d/console-setup \
-	sv.d/dmesg \
-	sv.d/hostname \
-	sv.d/hwclock \
-	sv.d/kmod-static-nodes \
-	sv.d/misc \
-	sv.d/mount-all \
-	sv.d/net-lo \
-	sv.d/random-seed \
-	sv.d/remount-root \
-	sv.d/swap \
-	sv.d/sysctl \
-	sv.d/sysusers \
-	sv.d/tmpfiles-dev \
-	sv.d/tmpfiles-setup \
-	sv.d/udev \
-	sv.d/udev-trigger \
-	sv.d/udev-settle \
-	sv.d/modules \
-	sv.d/sysfs \
-	sv.d/devfs \
-	sv.d/procfs \
-	sv.d/cgroups
+RCSTAGE1 = \
+    stage1/00-pseudofs \
+    stage1/01-cgroups \
+    stage1/01-static-devnodes \
+    stage1/02-modules \
+    stage1/02-udev \
+    stage1/03-console-setup \
+    stage1/03-hwclock \
+    stage1/04-rootfs \
+    stage1/06-cryptsetup \
+    stage1/06-fsck \
+    stage1/07-mountfs \
+    stage1/08-misc \
+    stage1/11-sysctl \
+    stage1/99-cleanup
+
+RCSTAGE3 = \
+	stage3/cryptsetup
 
 # SYSINIT = \
 # 	01-sysfs \
@@ -112,7 +102,7 @@ EDIT = sed \
 
 all: all-rc
 
-all-rc: $(RCBIN) $(RCSVD) $(RCFUNC) $(CONF)
+all-rc: $(RCBIN) $(RCSVD) $(RCSTAGE1) $(RCFUNC) $(CONF)
 
 install-rc:
 
@@ -128,34 +118,9 @@ install-rc:
 	install -d $(DESTDIR)$(RCSVDIR)
 	install -m755 $(RCSVD) $(DESTDIR)$(RCSVDIR)
 
-	install -d $(DESTDIR)$(RCDIR)/sysinit
+	install -d $(DESTDIR)$(RCDIR)/stage1
 
-	$(LN) $(RCSVDIR)/sysfs $(DESTDIR)$(RCDIR)/sysinit/01-sysfs
-	$(LN) $(RCSVDIR)/procfs $(DESTDIR)$(RCDIR)/sysinit/02-procfs
-	$(LN) $(RCSVDIR)/devfs $(DESTDIR)$(RCDIR)/sysinit/03-devfs
-	$(LN) $(RCSVDIR)/cgroups $(DESTDIR)$(RCDIR)/sysinit/04-cgroups
-	$(LN) $(RCSVDIR)/root $(DESTDIR)$(RCDIR)/sysinit/05-root
-	$(LN) $(RCSVDIR)/hostname $(DESTDIR)$(RCDIR)/sysinit/10-hostname
-	$(LN) $(RCSVDIR)/hwclock $(DESTDIR)$(RCDIR)/sysinit/15-hwclock
-	$(LN) $(RCSVDIR)/kmod-static-nodes $(DESTDIR)$(RCDIR)/sysinit/20-kmod-static-nodes
-	$(LN) $(RCSVDIR)/tmpfiles-dev $(DESTDIR)$(RCDIR)/sysinit/25-tmpfiles-dev
-	$(LN) $(RCSVDIR)/udev $(DESTDIR)$(RCDIR)/sysinit/30-udev
-	$(LN) $(RCSVDIR)/udev-trigger $(DESTDIR)$(RCDIR)/sysinit/31-udev-trigger
-	$(LN) $(RCSVDIR)/modules $(DESTDIR)$(RCDIR)/sysinit/32-modules
-	$(LN) $(RCSVDIR)/udev-settle $(DESTDIR)$(RCDIR)/sysinit/33-udev-settle
-	$(LN) $(RCSVDIR)/console-setup $(DESTDIR)$(RCDIR)/sysinit/40-console-setup
-	$(LN) $(RCSVDIR)/net-lo $(DESTDIR)$(RCDIR)/sysinit/45-net-lo
-	$(LN) $(RCSVDIR)/misc $(DESTDIR)$(RCDIR)/sysinit/50-misc
-	$(LN) $(RCSVDIR)/remount-root $(DESTDIR)$(RCDIR)/sysinit/55-remount-root
-	$(LN) $(RCSVDIR)/mount-all $(DESTDIR)$(RCDIR)/sysinit/60-mount-all
-	$(LN) $(RCSVDIR)/swap $(DESTDIR)$(RCDIR)/sysinit/65-swap
-	$(LN) $(RCSVDIR)/random-seed $(DESTDIR)$(RCDIR)/sysinit/70-random-seed
-	$(LN) $(RCSVDIR)/tmpfiles-setup $(DESTDIR)$(RCDIR)/sysinit/75-tmpfiles-setup
-	$(LN) $(RCSVDIR)/sysusers $(DESTDIR)$(RCDIR)/sysinit/80-sysusers
-	$(LN) $(RCSVDIR)/dmesg $(DESTDIR)$(RCDIR)/sysinit/85-dmesg
-	$(LN) $(RCSVDIR)/sysctl $(DESTDIR)$(RCDIR)/sysinit/90-sysctl
-	$(LN) $(RCSVDIR)/binfmt $(DESTDIR)$(RCDIR)/sysinit/95-binfmt
-	$(LN) $(RCSVDIR)/cleanup $(DESTDIR)$(RCDIR)/sysinit/99-cleanup
+	install -m644 $(DESTDIR)$(RCDIR)/stage1/
 
 	install -d $(DESTDIR)$(RCDIR)/shutdown
 
@@ -173,7 +138,7 @@ install-rc:
 install: install-rc
 
 clean-rc:
-	-$(RM) $(RCBIN) $(RCSVD) $(RCFUNC) $(CONF)
+	-$(RM) $(RCBIN) $(RCSTAGE1) $(RCSVD) $(RCFUNC) $(CONF)
 
 clean: clean-rc
 

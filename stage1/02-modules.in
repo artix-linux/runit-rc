@@ -1,0 +1,6 @@
+# In the off-chance someone compiled their own Linux kernel without
+# modules support
+[[ ! -e /proc/modules ]] && return 0
+
+msg "Loading user-specified modules"
+modules-load

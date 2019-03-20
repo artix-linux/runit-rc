@@ -1,0 +1,2 @@
+msg "Activating LVM devices"
+vgchange --sysinit -a -y || emergency_shell
