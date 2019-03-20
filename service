@@ -1,0 +1,153 @@
+#!/bin/bash
+# shellcheck disable=1091
+. /usr/lib/rc/functions
+
+have_daemon()
+{
+	[[ -x /usr/lib/rc/sv.d/$1 ]]
+}
+
+ec()
+{
+	echo -ne "${C_OTHER}[${C_DONE} up ${C_OTHER}]${C_CLEAR}"
+}
+
+ec2()
+{
+	echo -ne "${C_OTHER}[${C_FAIL}down${C_OTHER}]${C_CLEAR}"
+}
+
+ec3()
+{
+	echo -ne "${C_OTHER}[${C_DONE}*${C_OTHER}]${C_CLEAR}"
+}
+
+ec4()
+{
+	echo -ne "${C_OTHER}[${C_FAIL} ${C_OTHER}]${C_CLEAR}"
+}
+
+err()
+{
+	echo -ne "${C_FAIL}:: ${C_CLEAR}$1\n"
+	exit 1
+}
+
+runit_sv_available()
+{
+	[[ -f /etc/runit/sv/$1 ]]
+}
+
+runit_sv_enabled()
+{
+	[[ -h /run/runit/service/"$1" ]]
+}
+
+runit_sv_up()
+{
+	runit_sv_enabled "$1" && [[ "$(cat /run/runit/service/$1/supervise/stat 2>/dev/null)" == "run" ]]
+}
+
+enable_runit_sv()
+{
+	if ! runit_sv_enabled "$1"; then
+		ln -s /etc/runit/sv/"$1" /run/runit/service/
+		# this will make sure the service is enabled if ./down exists
+		sv start "$1"
+	else
+		sv start "$1"
+	fi
+}
+
+list_rc_services() {
+	echo "rc services: "
+	echo " - stage1"
+		cd /usr/lib/rc/sv.d || err "error!"
+	for d in *; do have_daemon "$d" && daemons+=("$d"); done
+	for daemon in "${daemons[@]}"; do
+		if ! ck_daemon "$daemon"; then
+			echo "  $(ec) $daemon"
+		else
+			echo "  $(ec2) $daemon"
+		fi
+	done
+}
+
+list_runit_services() {
+	echo "runit services: "
+	cd /etc/runit/sv || exit
+	for daemon in *; do
+		svstat="$(cat /run/runit/service/$daemon/supervise/stat 2>/dev/null)"
+		if runit_sv_up "$daemon"; then
+			printf "  $(ec)"
+		else
+			printf "  $(ec2)"
+		fi
+		if runit_sv_enabled "$daemon"; then
+			printf " $(ec3)"
+		else
+			printf " $(ec4)"
+		fi
+		printf " $daemon\n"
+	done
+}
+
+runit_send_signal() {
+	printf "%s" "$1" > "/run/runit/service/$2/supervise/control"
+}
+
+if [ $EUID != 0 ]; then
+	err "You must run this program as root!"
+	exit 1
+fi
+
+case "$1" in
+	"list")
+		case "$2" in
+			"rc") list_rc_services ;;
+			"runit") list_runit_services ;;
+			"") list_rc_services; list_runit_services ;;
+			*) err "$1: unknown parameters" ;;
+		esac
+	;;
+
+	# up+down + LSB-compatible init-script actions
+	"up"|"down"|"start"|"stop"|"reload"|"restart"|"shutdown"|"force-stop"|"force-reload"|"force-restart"|"force-shutdown"|"try-restart")
+		if runit_sv_enabled "$2"; then
+			sv "$1" "$2"
+			## RC GOES HERE
+		else
+			err "$2: runit service is not enabled!"
+		fi
+	;;
+
+	"status")
+		if runit_sv_enabled "$2"; then
+			sv "$1" "$2"
+		## RC GOES HERE
+		elif runit_sv_available "$2"; then
+			err "$2: runit service is not enabled"
+		## RC GOES HERE
+		else
+			err "$2 is not an existing runit or rc service!"
+		fi
+	;;
+
+	"pause"|"cont"|"hup"|"alarm"|"interrupt"|"quit"|"1"|"2"|"term"|"kill")
+		if runit_sv_enabled "$2"; then
+			sv "$1" "$2"
+		elif runit_sv_available "$2"; then
+			err "$2: runit service is not enabled"
+		else
+			err "$2 is not an existing runit service or rc service is not supported!"
+		fi
+	;;
+	"")
+		err "usage: service command ..."
+		exit 1
+	;;
+	*)
+		err "$1: unrecognized command"
+		err "$1: "
+		exit 1
+esac
