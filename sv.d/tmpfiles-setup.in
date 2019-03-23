@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# sourcing our current rc.conf requires this to be a bash script
-. @RCLIBDIR@/functions
-
-do_start()
-{
-	tmpfiles --exclude-prefix=/dev --create --remove --boot
-}

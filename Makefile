@@ -6,7 +6,7 @@ LIBDIR = $(PREFIX)/lib
 
 RCDIR = $(SYSCONFDIR)/rc
 RCLIBDIR = $(LIBDIR)/rc
-RCSVDIR = $(RCLIBDIR)/sv.d
+RCSVDIR = /etc/rc/sv.d
 RCRUNDIR = /run/sv.d
 
 RCBIN = \

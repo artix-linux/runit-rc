@@ -8,3 +8,10 @@ if [ ! -e /var/log/btmp ]; then
 fi
 install -dm1777 /tmp/.X11-unix /tmp/.ICE-unix
 rm -f /etc/nologin /forcefsck /forcequotacheck /fastboot
+
+if [ -e /proc/sys/kernel/dmesg_restrict ] &&
+	(( $(< /proc/sys/kernel/dmesg_restrict) == 1 )); then
+	install -Tm 0600 <( dmesg ) /var/log/dmesg.log
+else
+	install -Tm 0644 <( dmesg ) /var/log/dmesg.log
+fi

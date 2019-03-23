@@ -41,6 +41,89 @@ calc_columns () {
     fi
 }
 
+runit_sv_available()
+{
+	[[ -d @RUNITDIR@/sv/$1 ]]
+}
+
+runit_sv_enabled()
+{
+	[[ -h @RUNITRUNDIR@/service/"$1" ]]
+}
+
+rc_sv_enabled()
+{
+	[[ -f @RCRUNDIR@/active/$1 ]]
+}
+
+ck_service()
+{
+	if runit_sv_available "$1"; then
+		runit_sv_up "$1"
+	else
+	    rc_sv_enabled "$1"
+	fi
+}
+
+service_status()
+{
+	if ck_service "$1"; then
+		STATUS="${C_DONE} up "
+	else
+		STATUS="${C_FAIL}down"
+	fi
+	if runit_sv_available "$1"; then
+		if runit_sv_enabled "$1"; then
+			RUNIT_STATUS="${C_OTHER}[${C_DONE}*${C_OTHER}]${C_CLEAR}"
+		else
+			RUNIT_STATUS="${C_OTHER}[${C_FAIL} ${C_OTHER}]${C_CLEAR}"
+		fi
+	fi
+	printf "${C_OTHER}[$STATUS${C_OTHER}]${C_CLEAR}$RUNIT_STATUS $1 \n"
+}
+
+runit_sv_up()
+{
+	runit_sv_enabled "$1" && [[ "$(cat @RUNITRUNDIR@/service/$1/supervise/stat 2>/dev/null)" == "run" ]]
+}
+
+enable_runit_sv()
+{
+	if ! runit_sv_enabled "$1"; then
+		ln -s @RUNITDIR@/sv/"$1" @RUNITRUNDIR@/service/
+		# this will make sure the service is enabled if ./down exists
+		sv start "$1"
+	else
+		sv start "$1"
+	fi
+}
+
+list_rc_services() {
+	echo "rc services: "
+	cd @RCSVDIR@/sv.d || msg_error "error!"
+	for d in *; do
+		have_service "$d" && daemons+=("$d")
+		service_status "$d"
+	done
+}
+
+list_runit_services() {
+	echo "runit services: "
+	cd @RUNITDIR@/sv || exit
+	for daemon in *; do
+		service_status "$daemon"
+	done
+}
+
+runit_send_signal() {
+	printf "%s" "$1" > "/run/runit/service/$2/supervise/control"
+}
+
+have_service()
+{
+	[[ -x @RCSVDIR@/$1 ]]
+}
+
 ### Long functions to be run in stages
 
 # Check local filesystems
@@ -235,28 +318,24 @@ printsep() {
 }
 
 msg() {
-	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
+	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
 }
 
 msg_warn() {
-	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
+	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
 }
 
 msg_error() {
-	printf "${C_FAIL}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} "
-}
-
-daemon_active() {
-	[[ -f @RCRUNDIR@/up/$1 ]]
+	printf "${C_FAIL}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
 }
 
 add_daemon() {
-	[[ -d @RCRUNDIR@/up ]] || mkdir -p @RUNRCDIR@/up
-	touch @RCRUNDIR@/up/"$1"
+	[[ -d @RCRUNDIR@/active ]] || mkdir -p @RCRUNDIR@/up
+	touch @RCRUNDIR@/active/"$1"
 }
 
 rm_daemon() {
-	rm -f @RCRUNDIR@/up/"$1"
+	rm -f @RCRUNDIR@/active/"$1"
 }
 
 #  usage : in_array( $needle, $haystack )
