@@ -1,32 +1,24 @@
 #!/bin/bash
 
-# sourcing our current rc.conf requires this to be a bash script
 . @RCLIBDIR@/functions
 
-mount_binfmt(){
-    mountpoint -q /proc/sys/fs/binfmt_misc || \
-    mount -t binfmt_misc binfmt /proc/sys/fs/binfmt_misc || return 1
-
-    for path in /usr/lib/binfmt.d /etc/binfmt.d /run/binfmt.d; do
-        [[ ! -d $path ]] && continue
-        [[ -z "$(ls $path)" ]] && continue
-        grep "^:" $path/* | \
-            while read -r line; do
-                printf "%s" "$line" > /proc/sys/fs/binfmt_misc/register || return 1
-            done
-    done
-    return 0
+do_start()
+{
+	mountpoint -q /proc/sys/fs/binfmt_misc || \
+		mount -t binfmt_misc binfmt /proc/sys/fs/binfmt_misc
+	ret=$?
+	if [ $ret -gt 0 ]; then
+		msg_error "Cannot mount binfmt!"
+		return 1
+	fi
+	for path in /usr/lib/binfmt.d /etc/binfmt.d /run/binfmt.d; do
+		[[ ! -d $path ]] && continue
+		[[ -z "$(ls $path)" ]] && continue
+		grep "^:" $path/* | \
+			while read -r line; do
+				printf "%s" "$line" > /proc/sys/fs/binfmt_misc/register || return 1
+			done
+		done
 }
 
-case "$1" in
-    start)
-        stat_busy "Running binfmt"
-        mount_binfmt || stat_die binfmt
-        add_daemon binfmt
-        stat_done binfmt
-        ;;
-    *)
-        echo "usage: $0 {start}"
-        exit 1
-        ;;
-esac
+run_rc_command "$1"

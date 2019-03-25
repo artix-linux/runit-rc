@@ -1,16 +1,21 @@
+#!/bin/bash
+
+. @RCLIBDIR@/functions
+
 do_prestart()
 {
 	msg "Checking if network is available"
 	if [ -z "$NETMANAGER" ]; then
 		msg_error
+		return 1
 	fi
 }
 
 
 do_start()
 {
-	mount -a -t "$NETFS" || exit 1
-	mount -a -O _netdev || exit 1
+	mount -a -t "$NETFS" || return 1
+	mount -a -O _netdev || return 1
 }
 
 do_stop()
@@ -23,3 +28,5 @@ do_stop()
 	ret=$?
 	[ $ret != 0 ] && umount -a -f -l -O _netdev
 }
+
+run_rc_command "$1"

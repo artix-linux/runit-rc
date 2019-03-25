@@ -61,7 +61,7 @@ ck_service()
 	if runit_sv_available "$1"; then
 		runit_sv_up "$1"
 	else
-	    rc_sv_enabled "$1"
+		rc_sv_enabled "$1"
 	fi
 }
 
@@ -109,7 +109,7 @@ list_rc_services() {
 
 list_runit_services() {
 	echo "runit services: "
-	cd @RUNITDIR@/sv || exit
+	cd @RUNITDIR@/sv || return
 	for daemon in *; do
 		service_status "$daemon"
 	done
@@ -290,13 +290,78 @@ mount_cgroups(){
 }
 
 mount_cgs(){
-    if [ -d /sys/fs/cgroup ];then
+    if [ -d /sys/fs/cgroup ]; then
         mount_cgroups
         return 0
     fi
 }
 
 ### End
+
+### Begin: Oneshot services handling, rc-style.
+function_exists()
+{
+	declare -f -F "$1" > /dev/null
+	local ret=$?
+	return $ret
+}
+
+start()
+{
+	local RC_SVNAME="$(basename $0)"
+	if function_exists do_prestart; then
+		msg "$RC_SVNAME: running prestart"
+		do_prestart
+		local ret=$?
+		if [ $ret -gt 0 ]; then
+			msg_error "$RC_SVNAME: prestart failed"
+			return $ret
+		fi
+	fi
+
+	msg "$RC_SVNAME: starting"
+	do_start
+	ret=$?
+	if [ $ret -gt 0 ]; then
+		msg_error "$RC_SVNAME: failed to start"
+		return $ret
+	else
+		add_daemon "$RC_SVNAME"
+		msg "$RC_SVNAME: successfully activated"
+	fi
+
+	if function_exists do_poststart; then
+		msg "$RC_SVNAME: running poststart"
+		do_poststart
+		if [ $ret -gt 0 ]; then
+			msg_error "$RC_SVNAME: poststart failed"
+			msg "$RC_SVNAME: stopping"
+			do_stop
+			rm_daemon "$1"
+			return $ret
+		fi
+	fi
+}
+
+stop()
+{
+	if function_exists do_prestop; then
+		msg "$RC_SVNAME: running prestop"
+		do_prestop
+		local ret=$?
+		if [ $ret -gt 0 ]; then
+			msg_error "$RC_SVNAME: prestop failed"
+			return $ret
+		fi
+	fi
+	do_stop
+	rm_daemon "$1"
+}
+
+run_rc_command()
+{
+	eval "$1"
+}
 
 emergency_shell()
 {
@@ -318,19 +383,19 @@ printsep() {
 }
 
 msg() {
-	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
+	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
 msg_warn() {
-	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
+	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
 msg_error() {
-	printf "${C_FAIL}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR} \n"
+	printf "${C_FAIL}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
 add_daemon() {
-	[[ -d @RCRUNDIR@/active ]] || mkdir -p @RCRUNDIR@/up
+	[[ -d @RCRUNDIR@/active ]] || mkdir -p @RCRUNDIR@/active
 	touch @RCRUNDIR@/active/"$1"
 }
 
