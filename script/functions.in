@@ -374,7 +374,6 @@ do_unlock() {
 	fi
 
 	do_unlock_device "$name" "$device" "$password" "$options"
-	esac
 	failed=$?
 	if (( $failed )); then
 		printf "${C_FAIL}Unlocking of $1 failed.${C_CLEAR}\n"
@@ -433,7 +432,7 @@ start()
 		return $ret
 	else
 		add_daemon "$RC_SVNAME"
-		msg "$RC_SVNAME: successfully activated"
+		msg_ok "$RC_SVNAME: successfully activated"
 	fi
 
 	if function_exists do_poststart; then
@@ -492,8 +491,12 @@ msg() {
 	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
+msg_ok() {
+	printf "${C_DONE}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
+}
+
 msg_warn() {
-	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
+	printf "${C_WARN}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
 msg_error() {
@@ -575,7 +578,7 @@ if [[ $USECOLOR != [nN][oO] ]]; then
         C_BUSY=${C_CLEAR}$(tput setaf 6)     # busy
         C_FAIL=${C_MAIN}$(tput setaf 1)      # failed
         C_WARN=${C_MAIN}$(tput setaf 3)      # warning
-        C_DONE=${C_MAIN}                     # completed
+        C_DONE=${C_MAIN}$(tput setaf 2)      # completed
         C_START=${C_MAIN}$(tput setaf 2)     # started
         C_H1=${C_MAIN}                       # highlight text 1
         C_H2=${C_MAIN}$(tput setaf 6)        # highlight text 2
