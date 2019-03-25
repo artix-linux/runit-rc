@@ -1,0 +1,2 @@
+msg "Stopping encrypted devices"
+read_crypttab do_lock

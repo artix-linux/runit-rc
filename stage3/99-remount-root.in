@@ -1,0 +1,4 @@
+msg "Remounting rootfs read-only"
+mount -o remount,ro /
+
+sync

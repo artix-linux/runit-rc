@@ -1,0 +1,33 @@
+#!/bin/bash
+msg "Deactivating swap"
+swapoff -a
+
+msg "Unmounting filesystems"
+#umount -r -a -t nosysfs,noproc,nodevtmpfs,notmpfs
+findmnt -mrunRo TARGET,FSTYPE,OPTIONS / | {
+	while read -r target fstype options; do
+		# interpret the ascii chars, such as \x20 (space)
+		printf -v target '%b' "$target"
+		# match only targeted fstypes
+		if [[ $1 && $1 != "$fstype" ]]; then
+			continue
+		fi
+
+		# do not unmount API filesystems
+		if [[ $target = /@(proc|sys|run|dev|dev/pts) ]]; then
+			continue
+		fi
+
+		# avoid networked devices
+		IFS=, read -ra opts <<< "$options"
+		if in_array _netdev "${opts[@]}"; then
+			continue
+		fi
+
+		mounts=("$target" "${mounts[@]}")
+	done
+
+	if (( ${#mounts[*]} )); then
+		umount -r "${mounts[@]}" || return 1
+	fi
+}

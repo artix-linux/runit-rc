@@ -1,7 +1,7 @@
-if [ -r /etc/crypttab ]; then
+if [[ -r /etc/crypttab ]]; then
 	msg "Unlocking encrypted devices"
 	read_crypttab do_unlock
-	if [ -x /usr/bin/vgchange ]; then
+	if [[ -x /usr/bin/vgchange && -x @RCLIBDIR@/stage1/05-lvm ]]; then
 		msg "Activating LVM for encrypted devices"
 		vgchange --sysinit -a y >/dev/null || emergency_shell
 	fi

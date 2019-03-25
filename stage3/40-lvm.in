@@ -1,0 +1,7 @@
+msg "Deactivating LVM volumes"
+if [[ -x /usr/bin/vgchange ]]; then
+	vgs="$(vgs | wc -l)"
+	if [[ $vgs -gt 0 ]]; then
+		vgchange -a n
+	fi
+fi
