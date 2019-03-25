@@ -100,7 +100,7 @@ enable_runit_sv()
 
 list_rc_services() {
 	echo "rc services: "
-	cd @RCSVDIR@/sv.d || msg_error "error!"
+	cd @RCSVDIR@ || msg_error "error!"
 	for d in *; do
 		have_service "$d" && daemons+=("$d")
 		service_status "$d"

@@ -8,6 +8,8 @@ RCDIR = $(SYSCONFDIR)/rc
 RCLIBDIR = $(LIBDIR)/rc
 RCSVDIR = /etc/rc/sv.d
 RCRUNDIR = /run/sv.d
+RUNITDIR = /etc/runit
+RUNITRUNDIR = /run/runit
 
 RCBIN = \
 	script/rc-sysinit \
@@ -41,6 +43,10 @@ RCSTAGE3 = \
     stage3/50-cryptsetup \
     stage3/99-remount-root
 
+RCSVD = \
+	sv.d/binfmt \
+	sv.d/netmount
+
 CONF = script/rc.conf
 
 RCFUNC = script/functions script/cgroup-release-agent
@@ -56,6 +62,8 @@ EDIT = sed \
 	-e "s|@RCDIR[@]|$(RCDIR)|g" \
 	-e "s|@RCLIBDIR[@]|$(RCLIBDIR)|g" \
 	-e "s|@RCSVDIR[@]|$(RCSVDIR)|g" \
+	-e "s|@RUNITDIR[@]|$(RUNITDIR)|g" \
+	-e "s|@RUNITRUNDIR[@]|$(RUNITRUNDIR)|g" \
 	-e "s|@RCRUNDIR[@]|$(RCRUNDIR)|g"
 
 %: %.in Makefile
@@ -84,10 +92,10 @@ install-rc:
 	install -m755 $(RCSVD) $(DESTDIR)$(RCSVDIR)
 
 	install -d $(DESTDIR)$(RCLIBDIR)/stage1
-	install -m755 $(DESTDIR)$(RCLIBDIR)/stage1/
+	install -m755 $(RCSTAGE1) $(DESTDIR)$(RCLIBDIR)/stage1/
 
 	install -d $(DESTDIR)$(RCLIBDIR)/stage3/
-	install -m755 $(DESTDIR)$(RCLIBDIR)/stage3/
+	install -m755 $(RCSTAGE3) $(DESTDIR)$(RCLIBDIR)/stage3/
 
 	install -d $(DESTDIR)$(MANDIR)/man8
 	install -m644 script/modules-load.8 $(DESTDIR)$(MANDIR)/man8
