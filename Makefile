@@ -6,7 +6,8 @@ LIBDIR = $(PREFIX)/lib
 
 RCDIR = $(SYSCONFDIR)/rc
 RCLIBDIR = $(LIBDIR)/rc
-RCSVDIR = /etc/rc/sv.d
+RCSVDIR = /usr/share/rc/sv.d
+RCENABLEDDIR = /etc/rc/sv.d
 RCRUNDIR = /run/sv.d
 RUNITDIR = /etc/runit
 RUNITRUNDIR = /run/runit
@@ -90,6 +91,8 @@ install-rc:
 
 	install -d $(DESTDIR)$(RCSVDIR)
 	install -m755 $(RCSVD) $(DESTDIR)$(RCSVDIR)
+
+	install -d $(DESTDIR)$(RCENABLEDDIR)
 
 	install -d $(DESTDIR)$(RCLIBDIR)/stage1
 	install -m755 $(RCSTAGE1) $(DESTDIR)$(RCLIBDIR)/stage1/

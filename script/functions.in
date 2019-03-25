@@ -53,6 +53,11 @@ runit_sv_enabled()
 
 rc_sv_enabled()
 {
+	[[ -h @RCENABLEDDIR@/"$1" ]]
+}
+
+rc_sv_up()
+{
 	[[ -f @RCRUNDIR@/active/$1 ]]
 }
 
@@ -61,7 +66,7 @@ ck_service()
 	if runit_sv_available "$1"; then
 		runit_sv_up "$1"
 	else
-		rc_sv_enabled "$1"
+		rc_sv_up "$1"
 	fi
 }
 
@@ -74,12 +79,14 @@ service_status()
 	fi
 	if runit_sv_available "$1"; then
 		if runit_sv_enabled "$1"; then
-			RUNIT_STATUS="${C_OTHER}[${C_DONE}*${C_OTHER}]${C_CLEAR}"
+			ENABLED_STATUS="${C_MAIN}*"
+		elif rc_sv_enabled "$1"; then
+			ENABLED_STATUS="${C_MAIN}*"
 		else
-			RUNIT_STATUS="${C_OTHER}[${C_FAIL} ${C_OTHER}]${C_CLEAR}"
+			ENABLED_STATUS=" "
 		fi
 	fi
-	printf "${C_OTHER}[$STATUS${C_OTHER}]${C_CLEAR}$RUNIT_STATUS $1 \n"
+	printf "${C_OTHER}[$STATUS${C_OTHER}]${C_CLEAR} ${C_OTHER}[$ENABLED_STATUS${C_OTHER}]${C_CLEAR} $1 \n"
 }
 
 runit_sv_up()
@@ -95,6 +102,16 @@ enable_runit_sv()
 		sv start "$1"
 	else
 		sv start "$1"
+	fi
+}
+
+enable_rc_sv()
+{
+	if ! rc_sv_enabled "$1"; then
+		ln -s @RCSVDIR@/sv/"$1" @RCENABLEDDIR@/
+		@RCENABLEDDIR@/"$1" start
+	else
+		@RCENABLEDDIR@/"$1" start
 	fi
 }
 
