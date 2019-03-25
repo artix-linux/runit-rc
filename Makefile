@@ -24,6 +24,8 @@ RCSTAGE1 = \
     stage1/03-console-setup \
     stage1/03-hwclock \
     stage1/04-rootfs \
+    stage1/05-btrfs \
+    stage1/05-lvm \
     stage1/06-cryptsetup \
     stage1/06-fsck \
     stage1/07-mountfs \
@@ -32,7 +34,12 @@ RCSTAGE1 = \
     stage1/99-cleanup
 
 RCSTAGE3 = \
-	stage3/cryptsetup
+    stage3/10-misc \
+    stage3/30-killall \
+    stage3/40-filesystem \
+    stage3/40-lvm \
+    stage3/50-cryptsetup \
+    stage3/99-remount-root
 
 CONF = script/rc.conf
 
@@ -60,7 +67,7 @@ EDIT = sed \
 
 all: all-rc
 
-all-rc: $(RCBIN) $(RCSVD) $(RCSTAGE1) $(RCFUNC) $(CONF)
+all-rc: $(RCBIN) $(RCSVD) $(RCSTAGE1) $(RCSTAGE3) $(RCFUNC) $(CONF)
 
 install-rc:
 
@@ -88,7 +95,7 @@ install-rc:
 install: install-rc
 
 clean-rc:
-	-$(RM) $(RCBIN) $(RCSTAGE1) $(RCSVD) $(RCFUNC) $(CONF)
+	-$(RM) $(RCBIN) $(RCSTAGE1) $(RCSTAGE3) $(RCSVD) $(RCFUNC) $(CONF)
 
 clean: clean-rc
 
