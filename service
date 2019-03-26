@@ -30,10 +30,12 @@ case "$1" in
 	"status")
 		if runit_sv_enabled "$2"; then
 			sv "$1" "$2"
-		## RC GOES HERE
+		elif rc_sv_enabled "$2"; then
+			msg_ok "$2: rc service enabled"
 		elif runit_sv_available "$2"; then
 			msg_error "$2: runit service is not enabled"
-		## RC GOES HERE
+		elif rc_sv_available "$2"; then
+			msg_error "$2: rc service is not enabled"
 		else
 			msg_error "$2 is not an existing runit or rc service!"
 		fi

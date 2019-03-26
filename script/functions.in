@@ -51,6 +51,11 @@ runit_sv_enabled()
 	[[ -h @RUNITRUNDIR@/service/"$1" ]]
 }
 
+rc_sv_available()
+{
+	[[ -x @RCSVDIR@/"$1" ]]
+}
+
 rc_sv_enabled()
 {
 	[[ -h @RCENABLEDDIR@/"$1" ]]
