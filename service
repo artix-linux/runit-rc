@@ -74,10 +74,10 @@ case "$1" in
 				fi
 			done
 			ck_status "$2"
+			((i == 7)) && exit 1 || exit 0
 		else
 			msg_error "$2: runit service is not enabled or not a runit service"
 		fi
-		((i == 7)) && exit 1 || exit 0
 	;;
 
 	"reload") runit_send_signal "h" "$2"; ck_status "$2" ;;
@@ -113,7 +113,7 @@ case "$1" in
 			runit_send_signal "x" "$2"
 			for i in {1..7}; do
 				sleep 0.1
-				if ! runit_sv_enabled "$2"; then
+				if ! runit_sv_up "$2"; then
 					break
 				else
 					msg_warn "$2: timeout in $((8-i))"
@@ -138,10 +138,91 @@ case "$1" in
 				fi
 			done
 			ck_status "$2"
+			((i == 7)) && runit_send_signal "k" "$2" || exit 0
 		else
 			msg_error "$2: runit service is not enabled or not a runit service"
 		fi
-		((i == 7)) && runit_send_signal "k" "$2" || exit 0
+	;;
+
+	"force-reload")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "t" "$2"
+			runit_send_signal "c" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if runit_sv_up "$2"; then
+					break
+				else
+					msg_warn "$2: timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			ck_status "$2"
+			((i == 7)) && runit_send_signal "k" "$2" || exit 0
+		else
+			msg_error "$2: runit service is not enabled or not a runit service"
+		fi
+	;;
+
+	"force-restart")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "t" "$2"
+			runit_send_signal "c" "$2"
+			runit_send_signal "u" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if runit_sv_up "$2"; then
+					if [[ -x /run/runit/service/$2/check ]]; then
+						/run/runit/service/"$2"/check
+						ret=$?
+						if (( ret == 0 )); then check_fail=0; break; else msg_warn "$2: timeout in $((8-i))"; sleep 1; check_fail=1; fi
+					else
+						break
+					fi
+				else
+					msg_warn "$2: timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			((check_fail > 0)) && msg_warn "$2: check failed!"
+			ck_status "$2"
+			((i == 7)) && runit_send_signal "k" "$2" || exit 0
+		fi
+	;;
+
+	"force-shutdown")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "x" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if ! runit_sv_up "$2"; then
+					break
+				else
+					msg_warn "$2: timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			ck_status "$2"
+			((i == 7)) && runit_send_signal "k" "$2" || exit 0
+		fi
+	;;
+
+	"try-restart")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "t" "$2"
+			runit_send_signal "c" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if runit_sv_up "$2"; then
+					break
+				else
+					msg_warn "Timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			ck_status "$2"
+			((i == 7)) && exit 1 || exit 0
+		fi
 	;;
 
 	"")
