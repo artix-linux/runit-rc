@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=1091
-. script/functions.in # debug mode, will be changed later
+. script/functions # debug mode, will be changed later
 
 if [ $EUID != 0 ]; then
 	msg_error "You must run this program as root!"
@@ -17,45 +17,140 @@ case "$1" in
 		esac
 	;;
 
-	# up+down + LSB-compatible init-script actions
-	"up"|"down"|"start"|"stop"|"reload"|"restart"|"shutdown"|"force-stop"|"force-reload"|"force-restart"|"force-shutdown"|"try-restart")
-		if runit_sv_enabled "$2"; then
-			sv "$1" "$2"
-			## RC GOES HERE
+	"up") runit_send_signal "u" "$2" ;;
+	"down") runit_send_signal "d" "$2" ;;
+	"once") runit_send_signal "o" "$2" ;;
+	"exit") runit_send_signal "x" "$2" ;;
+	"pause") runit_send_signal "p" "$2" ;;
+	"cont") runit_send_signal "c" "$2" ;;
+	"hup") runit_send_signal "h" "$2" ;;
+	"alarm") runit_send_signal "a" "$2" ;;
+	"interrupt") runit_send_signal "i" "$2" ;;
+	"quit") runit_send_signal "q" "$2" ;;
+	"1") runit_send_signal "1" "$2" ;;
+	"2") runit_send_signal "2" "$2" ;;
+	"term") runit_send_signal "t" "$2" ;;
+	"kill") runit_send_signal "k" "$2" ;;
+
+	"status") ck_status "$2" ;;
+
+	"start")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "u" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if runit_sv_up "$2"; then
+					if [[ -x /run/runit/service/$2/check ]]; then
+						/run/runit/service/"$2"/check
+						ret=$?
+						if (( ret == 0 )); then check_fail=0; break; else msg_warn "$2: timeout in $((8-i))"; sleep 1; check_fail=1; fi
+					else
+						break
+					fi
+				else
+					msg_warn "$2: timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			((check_fail > 0)) && msg_warn "$2: check failed!"
+			ck_status "$2"
+			((i == 7)) && exit 1 || exit 0
 		else
-			msg_error "$2: runit service is not enabled!"
+			msg_error "$2: runit service is not enabled or not a runit service"
+			exit 1
 		fi
 	;;
 
-	"status")
-		if runit_sv_enabled "$2"; then
-			sv "$1" "$2"
-		elif rc_sv_enabled "$2"; then
-			msg_ok "$2: rc service enabled"
-		elif runit_sv_available "$2"; then
-			msg_error "$2: runit service is not enabled"
-		elif rc_sv_available "$2"; then
-			msg_error "$2: rc service is not enabled"
+	"stop")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "d" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if ! runit_sv_up "$2"; then
+					break
+				else
+					msg_warn "$2: timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			ck_status "$2"
 		else
-			msg_error "$2 is not an existing runit or rc service!"
+			msg_error "$2: runit service is not enabled or not a runit service"
+		fi
+		((i == 7)) && exit 1 || exit 0
+	;;
+
+	"reload") runit_send_signal "h" "$2"; ck_status "$2" ;;
+
+	"restart")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "t" "$2"
+			runit_send_signal "c" "$2"
+			runit_send_signal "u" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if runit_sv_up "$2"; then
+					if [[ -x /run/runit/service/$2/check ]]; then
+						/run/runit/service/"$2"/check
+						ret=$?
+						if (( ret == 0 )); then check_fail=0; break; else msg_warn "$2: timeout in $((8-i))"; sleep 1; check_fail=1; fi
+					else
+						break
+					fi
+				else
+					msg_warn "Timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			((check_fail > 0)) && msg_warn "$2: check failed!"
+			ck_status "$2"
+			((i == 7)) && exit 1 || exit 0
 		fi
 	;;
 
-	"pause"|"cont"|"hup"|"alarm"|"intmsg_errorupt"|"quit"|"1"|"2"|"term"|"kill")
-		if runit_sv_enabled "$2"; then
-			sv "$1" "$2"
-		elif runit_sv_available "$2"; then
-			msg_error "$2: runit service is not enabled"
-		else
-			msg_error "$2 is not an existing runit service or rc service is not supported!"
+	"shutdown")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "x" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if ! runit_sv_enabled "$2"; then
+					break
+				else
+					msg_warn "$2: timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			ck_status "$2"
+			((i == 7)) && exit 1 || exit 0
 		fi
 	;;
+
+	"force-stop")
+		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+			runit_send_signal "d" "$2"
+			for i in {1..7}; do
+				sleep 0.1
+				if ! runit_sv_up "$2"; then
+					break
+				else
+					msg_warn "$2: timeout in $((8-i))"
+					sleep 1
+				fi
+			done
+			ck_status "$2"
+		else
+			msg_error "$2: runit service is not enabled or not a runit service"
+		fi
+		((i == 7)) && runit_send_signal "k" "$2" || exit 0
+	;;
+
 	"")
 		msg_error "usage: service command ..."
 		exit 1
 	;;
+
 	*)
 		msg_error "$1: unrecognized command"
-		msg_error "$1: "
 		exit 1
+	;;
 esac
