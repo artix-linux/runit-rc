@@ -1,2 +1,9 @@
-msg "Stopping encrypted devices"
+msg "Deactivating encrypted devices"
 read_crypttab do_lock
+if [[ -x /usr/bin/vgchange && -x @RCLIBDIR@/stage3/40-lvm ]]; then
+	msg "Deactivating LVM volumes for encrypted devices"
+	vgs="$(vgs | wc -l)"
+	if [[ $vgs -gt 0 ]]; then
+		vgchange -a n
+	fi
+fi
