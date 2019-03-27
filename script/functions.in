@@ -101,14 +101,12 @@ service_status()
 	else
 		STATUS="${C_FAIL}down"
 	fi
-	if runit_sv_available "$1"; then
-		if runit_sv_enabled "$1"; then
-			ENABLED_STATUS="${C_MAIN}*"
-		elif rc_sv_enabled "$1"; then
-			ENABLED_STATUS="${C_MAIN}*"
-		else
-			ENABLED_STATUS=" "
-		fi
+	if runit_sv_enabled "$1"; then
+		ENABLED_STATUS="${C_MAIN}*"
+	elif rc_sv_enabled "$1"; then
+		ENABLED_STATUS="${C_MAIN}*"
+	else
+		ENABLED_STATUS=" "
 	fi
 	printf "${C_OTHER}[$STATUS${C_OTHER}]${C_CLEAR} ${C_OTHER}[$ENABLED_STATUS${C_OTHER}]${C_CLEAR} $1 \n"
 }
