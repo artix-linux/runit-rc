@@ -120,23 +120,28 @@ runit_sv_up()
 
 enable_runit_sv()
 {
-	if ! runit_sv_enabled "$1"; then
-		ln -s @RUNITDIR@/sv/"$1" @RUNITRUNDIR@/service/
-		# this will make sure the service is enabled if ./down exists
-		sv start "$1"
-	else
-		sv start "$1"
-	fi
+	ln -sf @RUNITDIR@/sv/"$1" @RUNITRUNDIR@/service/
+	# this will make sure the service is enabled if ./down exists
+	runit_send_signal "u" "$1"
+	ck_status "$1"
+}
+
+disable_runit_sv()
+{
+	rm -f @RUNITRUNDIR@/service/"$1"
+	msg_ok "$1: disabled"
 }
 
 enable_rc_sv()
 {
-	if ! rc_sv_enabled "$1"; then
-		ln -s @RCSVDIR@/sv/"$1" @RCENABLEDDIR@/
-		@RCENABLEDDIR@/"$1" start
-	else
-		@RCENABLEDDIR@/"$1" start
-	fi
+	ln -sf @RCSVDIR@/"$1" @RCENABLEDDIR@/
+	@RCENABLEDDIR@/"$1" start
+}
+
+disable_rc_sv()
+{
+	@RCENABLEDDIR@/"$1" stop
+	rm -f @RCENABLEDDIR@/"$1"
 }
 
 list_rc_services() {
@@ -160,7 +165,7 @@ runit_send_signal() {
 	if runit_sv_enabled "$2"; then
 		printf "%s" "$1" > "@RUNITRUNDIR@/service/$2/supervise/control"
 	else
-		msg_error "$2: not a runit service"
+		ck_status "$2"
 		return 100
 	fi
 }

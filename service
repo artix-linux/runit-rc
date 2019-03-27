@@ -35,7 +35,7 @@ case "$1" in
 	"status") ck_status "$2" ;;
 
 	"start")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "u" "$2"
 			for i in {1..7}; do
 				sleep 0.1
@@ -56,13 +56,12 @@ case "$1" in
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
 		else
-			msg_error "$2: runit service is not enabled or not a runit service"
-			exit 1
+			ck_status "$2"
 		fi
 	;;
 
 	"stop")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "d" "$2"
 			for i in {1..7}; do
 				sleep 0.1
@@ -76,14 +75,25 @@ case "$1" in
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
 		else
-			msg_error "$2: runit service is not enabled or not a runit service"
+			ck_status "$2"
 		fi
 	;;
 
-	"reload") runit_send_signal "h" "$2"; ck_status "$2" ;;
+	"reload")
+		if runit_sv_enabled "$2"; then
+			runit_send_signal "h" "$2"
+			ck_status "$2"
+		elif rc_sv_enabled "$2"; then
+			/etc/rc/sv.d/"$2" stop
+			sleep 1
+			/etc/rc/sv.d/"$2" start
+		else
+			ck_status "$2"
+		fi
+	;;
 
 	"restart")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "t" "$2"
 			runit_send_signal "c" "$2"
 			runit_send_signal "u" "$2"
@@ -105,11 +115,13 @@ case "$1" in
 			((check_fail > 0)) && msg_warn "$2: check failed!"
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
+		else
+			ck_status "$2"
 		fi
 	;;
 
 	"shutdown")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "x" "$2"
 			for i in {1..7}; do
 				sleep 0.1
@@ -122,11 +134,13 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
+		else
+			ck_status "$2"
 		fi
 	;;
 
 	"force-stop")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "d" "$2"
 			for i in {1..7}; do
 				sleep 0.1
@@ -140,12 +154,12 @@ case "$1" in
 			ck_status "$2"
 			((i == 7)) && runit_send_signal "k" "$2" || exit 0
 		else
-			msg_error "$2: runit service is not enabled or not a runit service"
+			ck_status "$2"
 		fi
 	;;
 
 	"force-reload")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "t" "$2"
 			runit_send_signal "c" "$2"
 			for i in {1..7}; do
@@ -160,12 +174,12 @@ case "$1" in
 			ck_status "$2"
 			((i == 7)) && runit_send_signal "k" "$2" || exit 0
 		else
-			msg_error "$2: runit service is not enabled or not a runit service"
+			ck_status "$2"
 		fi
 	;;
 
 	"force-restart")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "t" "$2"
 			runit_send_signal "c" "$2"
 			runit_send_signal "u" "$2"
@@ -187,11 +201,13 @@ case "$1" in
 			((check_fail > 0)) && msg_warn "$2: check failed!"
 			ck_status "$2"
 			((i == 7)) && runit_send_signal "k" "$2" || exit 0
+		else
+			ck_status "$2"
 		fi
 	;;
 
 	"force-shutdown")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "x" "$2"
 			for i in {1..7}; do
 				sleep 0.1
@@ -204,11 +220,13 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && runit_send_signal "k" "$2" || exit 0
+		else
+			ck_status "$2"
 		fi
 	;;
 
 	"try-restart")
-		if runit_sv_available "$2" && runit_sv_enabled "$2"; then
+		if runit_sv_enabled "$2"; then
 			runit_send_signal "t" "$2"
 			runit_send_signal "c" "$2"
 			for i in {1..7}; do
@@ -222,6 +240,32 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
+		else
+			ck_status "$2"
+		fi
+	;;
+
+	"enable")
+		if runit_sv_enabled "$2" || rc_sv_enabled "$2"; then
+			msg_error "$2: service is already enabled"
+		elif runit_sv_available "$2"; then
+			enable_runit_sv "$2"
+		elif rc_sv_available "$2"; then
+			enable_rc_sv "$2"
+		else
+			ck_status "$2"
+		fi
+	;;
+
+	"disable")
+		if runit_sv_enabled "$2"; then
+			disable_runit_sv "$2"
+		elif rc_sv_enabled "$2"; then
+			disable_rc_sv "$2"
+		elif runit_sv_available "$2" || rc_sv_available "$2"; then
+			msg_error "$2: runit/rc service is already disabled"
+		else
+			ck_status "$2"
 		fi
 	;;
 
