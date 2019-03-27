@@ -68,7 +68,7 @@ rc_sv_up()
 
 ck_service()
 {
-	if runit_sv_available "$1"; then
+	if runit_sv_enabled "$1"; then
 		runit_sv_up "$1"
 	else
 		rc_sv_up "$1"
@@ -84,7 +84,11 @@ ck_status()
 			msg_error "$1: down"
 		fi
 	elif rc_sv_enabled "$1"; then
-		msg_ok "$1: rc service enabled"
+		if rc_sv_up "$1"; then
+			msg_ok "$1: rc service up"
+		else
+			msg_ok "$1: rc service down"
+		fi
 	elif runit_sv_available "$1"; then
 		msg_error "$1: runit service is not enabled"
 	elif rc_sv_available "$1"; then
@@ -491,7 +495,7 @@ start()
 			msg_error "$RC_SVNAME: poststart failed"
 			msg "$RC_SVNAME: stopping"
 			do_stop
-			rm_daemon "$1"
+			rm_daemon "$RC_SVNAME"
 			return $ret
 		fi
 	fi
@@ -499,6 +503,7 @@ start()
 
 stop()
 {
+	local RC_SVNAME="$(basename $0)"
 	if function_exists do_prestop; then
 		msg "$RC_SVNAME: running prestop"
 		do_prestop
@@ -509,7 +514,7 @@ stop()
 		fi
 	fi
 	do_stop
-	rm_daemon "$1"
+	rm_daemon "$RC_SVNAME"
 }
 
 run_rc_command()

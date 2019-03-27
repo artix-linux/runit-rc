@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=1091
-. script/functions # debug mode, will be changed later
+. /usr/lib/rc/functions # debug mode, will be changed later
 
 if [ $EUID != 0 ]; then
 	msg_error "You must run this program as root!"
@@ -55,6 +55,9 @@ case "$1" in
 			((check_fail > 0)) && msg_warn "$2: check failed!"
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
+		elif rc_sv_enabled "$2"; then
+			/etc/rc/sv.d/"$2" start
+			ck_status "$2"
 		else
 			ck_status "$2"
 		fi
@@ -74,6 +77,9 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
+		elif rc_sv_enabled "$2"; then
+			/etc/rc/sv.d/"$2" stop
+			ck_status "$2"
 		else
 			ck_status "$2"
 		fi
