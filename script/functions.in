@@ -591,6 +591,24 @@ print_leave(){
     echo " "
 }
 
+run_sysinit(){
+    # Prints distro name and URL
+    print_welcome
+    calc_columns
+
+    for stage1 in ${RC_STAGE1[@]};do
+		[[ -x stage1 && -r stage1 ]] && . stage1
+    done
+}
+
+run_shutdown(){
+    print_leave
+
+    for stage3 in ${RC_STAGE3[@]};do
+		[[ -x stage3 && -r stage3 ]] && . stage3
+    done
+}
+
 # if [[ $1 == "start" ]]; then
 # 	if [[ $STARTING ]]; then
 # 		echo "A daemon is starting another daemon; this is unlikely to work as intended."
@@ -650,3 +668,6 @@ fi
 
 PREFIX_REG="::"
 PREFIX_HL=" >"
+
+RC_SYSINIT=$(ls @RCLIBDIR@/stage1)
+RC_SHUTDOWN=$(ls @RCLIBDIR@/stage3)
