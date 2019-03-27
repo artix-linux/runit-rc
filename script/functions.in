@@ -596,7 +596,7 @@ run_sysinit(){
     print_welcome
     calc_columns
 
-    for stage1 in ${RC_STAGE1[@]}; do
+    for stage1 in @RCLIBDIR@/stage1/*; do
 		[[ -x $stage1 && -r $stage1 ]] && . $stage1
     done
 }
@@ -604,7 +604,7 @@ run_sysinit(){
 run_shutdown(){
     print_leave
 
-    for stage3 in ${RC_STAGE3[@]}; do
+    for stage3 in @RCLIBDIR@/stage3/*; do
 		[[ -x $stage3 && -r $stage3 ]] && . $stage3
     done
 }
@@ -668,6 +668,3 @@ fi
 
 PREFIX_REG="::"
 PREFIX_HL=" >"
-
-RC_STAGE1=$(find @RCLIBDIR@/stage1 | sort)
-RC_STAGE3=$(find @RCLIBDIR@/stage3 | sort)
