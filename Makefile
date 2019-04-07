@@ -13,10 +13,8 @@ RUNITDIR = /etc/runit
 RUNITRUNDIR = /run/runit
 
 RCBIN = \
-	script/rc-sysinit \
-	script/rc-shutdown \
-	script/rc-sv \
-	script/modules-load
+	script/modules-load \
+	script/service
 
 RCSTAGE1 = \
     stage1/00-pseudofs \
