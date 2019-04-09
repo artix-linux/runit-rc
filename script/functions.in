@@ -165,7 +165,15 @@ list_runit_services() {
 
 runit_send_signal() {
 	if runit_sv_enabled "$2"; then
-		printf "%s" "$1" > "@RUNITRUNDIR@/service/$2/supervise/control"
+		for i in {1..7}; do
+			sleep 0.1
+			if [[ -e @RUNITRUNDIR@/service/$2/supervise/control ]]; then
+				printf "%s" "$1" > "@RUNITRUNDIR@/service/$2/supervise/control"
+				break
+			else
+				sleep 1
+			fi
+		done
 	else
 		ck_status "$2"
 		return 100
