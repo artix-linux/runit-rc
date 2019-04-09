@@ -614,6 +614,20 @@ run_shutdown(){
     done
 }
 
+run_oneshot_services()
+{
+	for files in @RCENABLEDDIR@/*; do
+		$files start
+	done
+}
+
+stop_oneshot_services()
+{
+	for files in @RCENABLEDDIR@/*; do
+		$files stop
+	done
+}
+
 # if [[ $1 == "start" ]]; then
 # 	if [[ $STARTING ]]; then
 # 		echo "A daemon is starting another daemon; this is unlikely to work as intended."
