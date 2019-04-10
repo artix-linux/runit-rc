@@ -104,7 +104,8 @@ install-rc:
 	install -m755 $(RCSTAGE3) $(DESTDIR)$(RCLIBDIR)/stage3/
 
 	install -d $(DESTDIR)$(MANDIR)/man8
-	install -m644 script/modules-load.8 $(DESTDIR)$(MANDIR)/man8
+	install -m644 man/modules-load.8 $(DESTDIR)$(MANDIR)/man8
+	install -m644 man/service.8 $(DESTDIR)$(MANDIR)/man8
 
 install-lvm:
 	install -d $(DESTDIR)$(RCLIBDIR)/stage1

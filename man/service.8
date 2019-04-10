@@ -1,0 +1,103 @@
+.TH "SERVICE" "8" "April 2019" "Artix Linux" "service"
+.
+.SH "NAME"
+\fBservice\fR \- control and manages services in Artix
+.
+.SH "SYNOPSIS"
+\fBservice <command> \.\.\.\fR
+.
+.SH "DESCRIPTION"
+The \fBservice\fR program reports the current status and control the state of runsv(8) services and one\-shot services\.
+.
+.P
+\fBcommand\fR is one of up, down, status, once, pause, cont, hup, alarm, interrupt, 1, 2, term, kill, or exit, or start, stop, restart, shutdown, force\-stop, force\-reload, force\-restart, force\-sutdown\.
+.
+.SH "COMMANDS"
+.
+.TP
+\fBlist [runit|rc]\fR
+List all runit and rc services\.
+.
+.TP
+\fBenable [servicename]\fR
+Immediately start the runit or oneshot service, and start them on boot\.
+.
+.TP
+\fBdisable [servicename]\fR
+Immediately stop the runit or oneshot service, and don\'t start them on boot\.
+.
+.P
+Commands below are restricted to runit(8) services only:
+.
+.TP
+\fBstatus\fR
+Report the current status of the service, and the appendant log service if available, to standard output\.
+.
+.TP
+\fBup\fR
+If the service is not running, start it\. If the service stops, restart it\.
+.
+.TP
+\fBdown\fR
+If the service is running, send it the TERM signal, and the CONT signal\. If \./run exits, start \./finish if it exists\. After it stops, do not restart service\.
+.
+.TP
+\fBonce\fR
+If the service is not runing, start it\. Do not restart it if it stops\.
+.
+.TP
+\fBexit\fR
+If the service is running, send it the TERM signal, and the CONT signal\. Do not restart the service\. If the service is down, and no log service exists, runsv(8) exits\.
+.
+.P
+Commands below apply to both runit(8) services and rc oneshot services:
+.
+.TP
+\fBstatus\fR
+Same as above\.
+.
+.TP
+\fBstart\fR
+Same as \fBup\fR, but wait up to 7 seconds for the command to take effect\. Then report the status or timeout\. If the script \fB\./check\fR exists in the directory, \fBservice\fR runs this script to check whether the service is up and available; it is considered to be available if \fB\./check\fR exits with 0\. For rc oneshot services, commands in \fBstart()\fR (and it\'s pre\- and post\- commands) will be executed immediately\.
+.
+.TP
+\fBstop\fR
+Same as \fBdown\fR, but wait up to 7 seconds for the command to take effect\. Then report the status or timeout\. For rc oneshot services, commands in \fBstop()\fR (and it\'s pre\- and post\- commands) will be executed immediately\.
+.
+.TP
+\fBreload\fR
+Same as \fBhup\fR, and additionally report the status afterwards\. For rc oneshot services, the service will be stopped and started\.
+.
+.P
+Commands below are restricted to runit(8) services only:
+.
+.TP
+\fBrestart\fR
+Send the commands \fBterm\fR, \fBcont\fR, and \fBup\fR to the service, and wait up to 7 seconds for the service to restart\. Then report the status or timeout\. If the script \fB\./check\fR exists in the directory, \fBservice\fR runs this script to check whether the service is up and available again; it is considered to be available if \fB\./check\fR exits with 0\.
+.
+.TP
+\fBshutdown\fR
+Same as \fBexit\fR, but wait up to 7 seconds for the runsv(8) process to terminate\. Then report the status or timeout\.
+.
+.TP
+\fBforce\-stop\fR
+Same as \fBdown\fR, but wait up to 7 seconds for the service to become down\. Then report the status, and on timeout send the service the \fBkill\fR command\.
+.
+.TP
+\fBforce\-reload\fR
+Send the service the \fBterm\fR and \fBcont\fR commands, and wait up to 7 seconds for the service to restart\. Then report the status, and on timeout send the service the \fBkill\fR command\.
+.
+.TP
+\fBforce\-restart\fR
+Send the service the \fBterm\fR, \fBcont\fR and \fBup\fR commands, and wait up to 7 seconds for the service to restart\. Then report the status, and on timeout send the service the \fBkill\fR command\. If the script \fB\./check\fR exists in the service directory, \fBservice\fR runs this script to check whether the service is up and available again; it’s considered to be available if \fB\./check\fR exits with 0\.
+.
+.TP
+\fBforce\-shutdown\fR
+Same as \fBexit\fR, but wait up to 7 seconds for the runsv(8) process to terminate\. Then report the status, and on timeout send the service the \fBkill\fR command\.
+.
+.TP
+\fBtry\-restart\fR
+if the service is running, send it the \fBterm\fR and \fBcont\fR commands, and wait up to 7 seconds for the service to restart\. Then report the status or timeout\.
+.
+.SH "SEE ALSO"
+sv(8), runsv(8), runit(8)
