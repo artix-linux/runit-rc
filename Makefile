@@ -26,20 +26,24 @@ RCSTAGE1 = \
     stage1/03-hwclock \
     stage1/04-rootfs \
     stage1/05-btrfs \
-    stage1/05-lvm \
-    stage1/06-cryptsetup \
     stage1/06-fsck \
     stage1/07-mountfs \
     stage1/08-misc \
     stage1/11-sysctl \
     stage1/99-cleanup
 
+RCLVM1 = stage1/05-lvm
+
+RCLVM3 = stage3/40-lvm
+
+RCCRYPT1 = stage1/06-cryptsetup
+
+RCCRYPT3 = stage3/50-cryptsetup
+
 RCSTAGE3 = \
     stage3/10-misc \
     stage3/30-killall \
     stage3/40-filesystem \
-    stage3/40-lvm \
-    stage3/50-cryptsetup \
     stage3/99-remount-root
 
 RCSVD = \
@@ -75,7 +79,7 @@ EDIT = sed \
 
 all: all-rc
 
-all-rc: $(RCBIN) $(RCSVD) $(RCSTAGE1) $(RCSTAGE3) $(RCFUNC) $(CONF)
+all-rc: $(RCBIN) $(RCSVD) $(RCSTAGE1) $(RCSTAGE3) $(RCCRYPT1) $(RCCRYPT3) $(RCLVM1) $(RCLVM3) $(RCFUNC) $(CONF)
 
 install-rc:
 
@@ -102,6 +106,20 @@ install-rc:
 	install -d $(DESTDIR)$(MANDIR)/man8
 	install -m644 script/modules-load.8 $(DESTDIR)$(MANDIR)/man8
 
+install-lvm:
+	install -d $(DESTDIR)$(RCLIBDIR)/stage1
+	install -m755 $(RCCRYPT1) $(DESTDIR)$(RCLIBDIR)/stage1/
+
+	install -d $(DESTDIR)$(RCLIBDIR)/stage3/
+	install -m755 $(RCCRYPT3) $(DESTDIR)$(RCLIBDIR)/stage3/
+
+install-crypt:
+	install -d $(DESTDIR)$(RCLIBDIR)/stage1
+	install -m755 $(RCCRYPT1) $(DESTDIR)$(RCLIBDIR)/stage1/
+
+	install -d $(DESTDIR)$(RCLIBDIR)/stage3/
+	install -m755 $(RCCRYPT3) $(DESTDIR)$(RCLIBDIR)/stage3/
+
 install: install-rc
 
 clean-rc:
@@ -109,4 +127,4 @@ clean-rc:
 
 clean: clean-rc
 
-.PHONY: all install clean install-rc clean-rc all-rc
+.PHONY: all install clean install-rc clean-rc all-rc install-lvm install-crypt
