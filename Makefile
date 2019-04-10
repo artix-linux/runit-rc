@@ -123,7 +123,7 @@ install-crypt:
 install: install-rc
 
 clean-rc:
-	-$(RM) $(RCBIN) $(RCSTAGE1) $(RCSTAGE3) $(RCSVD) $(RCFUNC) $(CONF)
+	-$(RM) $(RCBIN) $(RCSVD) $(RCSTAGE1) $(RCSTAGE3) $(RCCRYPT1) $(RCCRYPT3) $(RCLVM1) $(RCLVM3) $(RCFUNC) $(CONF)
 
 clean: clean-rc
 

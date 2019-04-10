@@ -1,4 +1,3 @@
-#!/bin/bash
 msg "Deactivating swap"
 swapoff -a
 
