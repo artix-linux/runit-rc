@@ -80,7 +80,7 @@ case "$1" in
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
 		elif rc_sv_enabled "$2"; then
-			@RCENABLEDDIR@/"$2"/down
+			[ -x @RCENABLEDDIR@/"$2"/down ] && @RCENABLEDDIR@/"$2"/down
 			(( ret == 0 )) && rm_daemon "$2"
 			ck_status "$2"
 		else
@@ -93,9 +93,9 @@ case "$1" in
 			runit_send_signal "h" "$2"
 			ck_status "$2"
 		elif rc_sv_enabled "$2"; then
-			@RCENABLEDDIR@/"$2" stop
+			[ -x @RCENABLEDDIR@/"$2"/down ] && @RCENABLEDDIR@/"$2"/down
 			sleep 1
-			@RCENABLEDDIR@/"$2" start
+			@RCENABLEDDIR@/"$2"/up
 		else
 			ck_status "$2"
 		fi

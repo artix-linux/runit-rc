@@ -142,7 +142,7 @@ enable_rc_sv()
 
 disable_rc_sv()
 {
-	@RCENABLEDDIR@/"$1"/down
+	[ -x @RCENABLEDDIR@/"$1"/down ] && @RCENABLEDDIR@/"$1"/down
 	rm -f @RCENABLEDDIR@/"$1"
 }
 
