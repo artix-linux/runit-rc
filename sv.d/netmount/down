@@ -1,0 +1,8 @@
+#!/bin/sh
+umount -a -f -t "$NETFS"
+ret=$?
+[ $ret != 0 ] && umount -a -f -l -t "$NETFS"
+
+umount -a -f -O _netdev
+ret=$?
+[ $ret != 0 ] && umount -a -f -l -O _netdev

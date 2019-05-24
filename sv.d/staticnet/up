@@ -1,0 +1,11 @@
+#!/bin/sh
+[ -r conf ] && . ./conf
+if [ -z "${INTERFACE}" ]; then
+    msg_error "Interface has not been set! See ./conf for more details"; return 1
+elif [ -z "${IPADDR}" ]; then
+    msg_error "IP address has not been set! See /etc/rc/sv.d/staticnet/conf for more details"; return 1
+elif [ -z "${ROUTE}" ]; then
+    msg_error "IP route has not been set! See /etc/rc/sv.d/staticnet/conf for more details"; return 1
+fi
+ip addr add "${IPADDR}" broadcast "${BROADCAST:=+}" dev "${INTERFACE}"
+ip route add "${ROUTE}" dev "${INTERFACE}"

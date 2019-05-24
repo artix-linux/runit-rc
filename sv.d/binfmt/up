@@ -1,0 +1,16 @@
+#!/bin/sh
+mountpoint -q /proc/sys/fs/binfmt_misc || \
+	mount -t binfmt_misc binfmt /proc/sys/fs/binfmt_misc
+ret=$?
+if [ $ret -gt 0 ]; then
+	msg_error "Cannot mount binfmt!"
+	return 1
+fi
+for path in /usr/lib/binfmt.d /usr/local/binfmt.d /run/binfmt.d /etc/binfmt.d; do
+	[[ ! -d $path ]] && continue
+	[[ -z "$(ls $path)" ]] && continue
+	grep "^:" $path/* | \
+		while read -r line; do
+			printf "%s" "$line" > /proc/sys/fs/binfmt_misc/register || return 1
+		done
+done

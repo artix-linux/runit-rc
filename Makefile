@@ -46,10 +46,6 @@ RCSTAGE3 = \
     stage3/40-filesystem \
     stage3/99-remount-root
 
-RCSVD = \
-	sv.d/binfmt \
-	sv.d/netmount
-
 CONF = script/rc.conf
 
 RCFUNC = script/functions script/cgroup-release-agent
@@ -79,7 +75,7 @@ EDIT = sed \
 
 all: all-rc
 
-all-rc: $(RCBIN) $(RCSVD) $(RCSTAGE1) $(RCSTAGE3) $(RCCRYPT1) $(RCCRYPT3) $(RCLVM1) $(RCLVM3) $(RCFUNC) $(CONF)
+all-rc: $(RCBIN) $(RCSTAGE1) $(RCSTAGE3) $(RCCRYPT1) $(RCCRYPT3) $(RCLVM1) $(RCLVM3) $(RCFUNC) $(CONF)
 
 install-rc:
 
@@ -120,6 +116,17 @@ install-crypt:
 
 	install -d $(DESTDIR)$(RCLIBDIR)/stage3/
 	install -m755 $(RCCRYPT3) $(DESTDIR)$(RCLIBDIR)/stage3/
+
+install-services:
+	install -d $(DESTDIR)$(RCSVDIR)/binfmt
+	install -m755 sv.d/binfmt/up $(DESTDIR)$(RCSVDIR)/binfmt
+	install -m755 sv.d/binfmt/down $(DESTDIR)$(RCSVDIR)/binfmt
+	install -d $(DESTDIR)$(RCSVDIR)/netmount
+	install -m755 sv.d/netmount/up $(DESTDIR)$(RCSVDIR)/netmount
+	install -m755 sv.d/netmount/down $(DESTDIR)$(RCSVDIR)/netmount
+	install -d $(DESTDIR)$(RCSVDIR)/staticnet
+	install -m755 sv.d/staticnet/up $(DESTDIR)$(RCSVDIR)/staticnet
+	install -m755 sv.d/staticnet/down $(DESTDIR)$(RCSVDIR)/staticnet
 
 install: install-rc
 

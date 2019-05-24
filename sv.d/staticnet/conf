@@ -1,0 +1,11 @@
+# The interface to be used
+#INTERFACE="enp3s0"
+
+# The IP address, in CIDR notation
+#IPADDR="192.168.1.2/24"
+
+# The broadcast address, leave it commented to determine it automatically
+#BROADCAST="192.168.1.255"
+
+# IP routing gateway
+#ROUTE="default via 192.168.1.1"

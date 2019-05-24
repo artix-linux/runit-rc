@@ -137,12 +137,12 @@ disable_runit_sv()
 enable_rc_sv()
 {
 	ln -sf @RCSVDIR@/"$1" @RCENABLEDDIR@/
-	@RCENABLEDDIR@/"$1" start
+	@RCENABLEDDIR@/"$1"/up
 }
 
 disable_rc_sv()
 {
-	@RCENABLEDDIR@/"$1" stop
+	@RCENABLEDDIR@/"$1"/down
 	rm -f @RCENABLEDDIR@/"$1"
 }
 
@@ -463,67 +463,6 @@ read_crypttab() {
 }
 
 ### End
-
-### Begin: Oneshot services handling, rc-style.
-function_exists()
-{
-	declare -f -F "$1" > /dev/null
-	local ret=$?
-	return $ret
-}
-
-start()
-{
-	local RC_SVNAME="$(basename $0)"
-	if function_exists do_prestart; then
-		msg "$RC_SVNAME: running prestart"
-		do_prestart
-		local ret=$?
-		if [ $ret -gt 0 ]; then
-			msg_error "$RC_SVNAME: prestart failed"
-			return $ret
-		fi
-	fi
-
-	msg "$RC_SVNAME: starting"
-	do_start
-	ret=$?
-	if [ $ret -gt 0 ]; then
-		msg_error "$RC_SVNAME: failed to start"
-		return $ret
-	else
-		add_daemon "$RC_SVNAME"
-		msg_ok "$RC_SVNAME: successfully activated"
-	fi
-
-	if function_exists do_poststart; then
-		msg "$RC_SVNAME: running poststart"
-		do_poststart
-		if [ $ret -gt 0 ]; then
-			msg_error "$RC_SVNAME: poststart failed"
-			msg "$RC_SVNAME: stopping"
-			do_stop
-			rm_daemon "$RC_SVNAME"
-			return $ret
-		fi
-	fi
-}
-
-stop()
-{
-	local RC_SVNAME="$(basename $0)"
-	if function_exists do_prestop; then
-		msg "$RC_SVNAME: running prestop"
-		do_prestop
-		local ret=$?
-		if [ $ret -gt 0 ]; then
-			msg_error "$RC_SVNAME: prestop failed"
-			return $ret
-		fi
-	fi
-	do_stop
-	rm_daemon "$RC_SVNAME"
-}
 
 run_rc_command()
 {

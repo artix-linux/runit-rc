@@ -56,7 +56,9 @@ case "$1" in
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
 		elif rc_sv_enabled "$2"; then
-			@RCENABLEDDIR@/"$2" start
+			@RCENABLEDDIR@/"$2"/up
+			ret=$?
+			(( ret == 0 )) && add_daemon "$2"
 			ck_status "$2"
 		else
 			ck_status "$2"
@@ -78,7 +80,8 @@ case "$1" in
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
 		elif rc_sv_enabled "$2"; then
-			@RCENABLEDDIR@/"$2" stop
+			@RCENABLEDDIR@/"$2"/down
+			(( ret == 0 )) && rm_daemon "$2"
 			ck_status "$2"
 		else
 			ck_status "$2"
