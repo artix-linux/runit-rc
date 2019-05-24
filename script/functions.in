@@ -383,6 +383,7 @@ do_unlock_device() {
 				"keyfile-size"*) opts+="-l ${i##*=}" ;;
 				"keyfile-offset"*) opts+="--keyfile-offset ${i##*=}" ;;
 				"key-slot"*) opts+="-S ${i##*=}" ;;
+				"luks") ;;
 				*)
 					printhl "The option is not currently supported at the moment."
 					printhl "Please add an issue to https://github.com/artix-linux/runit-rc"
