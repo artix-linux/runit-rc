@@ -43,146 +43,146 @@ calc_columns () {
 
 runit_sv_available()
 {
-	[[ -d @RUNITDIR@/sv/$1 ]]
+    [[ -d @RUNITDIR@/sv/$1 ]]
 }
 
 runit_sv_enabled()
 {
-	[[ -h @RUNITRUNDIR@/service/"$1" ]]
+    [[ -h @RUNITRUNDIR@/service/"$1" ]]
 }
 
 rc_sv_available()
 {
-	[[ -x @RCSVDIR@/"$1" ]]
+    [[ -x @RCSVDIR@/"$1" ]]
 }
 
 rc_sv_enabled()
 {
-	[[ -h @RCENABLEDDIR@/"$1" ]]
+    [[ -h @RCENABLEDDIR@/"$1" ]]
 }
 
 rc_sv_up()
 {
-	[[ -f @RCRUNDIR@/active/$1 ]]
+    [[ -f @RCRUNDIR@/active/$1 ]]
 }
 
 ck_service()
 {
-	if runit_sv_enabled "$1"; then
-		runit_sv_up "$1"
-	else
-		rc_sv_up "$1"
-	fi
+    if runit_sv_enabled "$1"; then
+        runit_sv_up "$1"
+    else
+        rc_sv_up "$1"
+    fi
 }
 
 ck_status()
 {
-	if runit_sv_enabled "$1"; then
-		if runit_sv_up "$1"; then
-			msg_ok "$1: up, pid: $(cat @RUNITRUNDIR@/service/$1/supervise/pid)"
-		else
-			msg_error "$1: down"
-		fi
-	elif rc_sv_enabled "$1"; then
-		if rc_sv_up "$1"; then
-			msg_ok "$1: rc service up"
-		else
-			msg_ok "$1: rc service down"
-		fi
-	elif runit_sv_available "$1"; then
-		msg_error "$1: runit service is not enabled"
-	elif rc_sv_available "$1"; then
-		msg_error "$1: rc service is not enabled"
-	else
-		msg_error "$1 is not an existing runit or rc service"
-	fi
+    if runit_sv_enabled "$1"; then
+        if runit_sv_up "$1"; then
+            msg_ok "$1: up, pid: $(cat @RUNITRUNDIR@/service/$1/supervise/pid)"
+        else
+            msg_error "$1: down"
+        fi
+    elif rc_sv_enabled "$1"; then
+        if rc_sv_up "$1"; then
+            msg_ok "$1: rc service up"
+        else
+            msg_ok "$1: rc service down"
+        fi
+    elif runit_sv_available "$1"; then
+        msg_error "$1: runit service is not enabled"
+    elif rc_sv_available "$1"; then
+        msg_error "$1: rc service is not enabled"
+    else
+        msg_error "$1 is not an existing runit or rc service"
+    fi
 }
 
 service_status()
 {
-	if ck_service "$1"; then
-		STATUS="${C_DONE} up "
-	else
-		STATUS="${C_FAIL}down"
-	fi
-	if runit_sv_enabled "$1"; then
-		ENABLED_STATUS="${C_MAIN}*"
-	elif rc_sv_enabled "$1"; then
-		ENABLED_STATUS="${C_MAIN}*"
-	else
-		ENABLED_STATUS=" "
-	fi
-	printf "${C_OTHER}[$STATUS${C_OTHER}]${C_CLEAR} ${C_OTHER}[$ENABLED_STATUS${C_OTHER}]${C_CLEAR} $1 \n"
+    if ck_service "$1"; then
+        STATUS="${C_DONE} up "
+    else
+        STATUS="${C_FAIL}down"
+    fi
+    if runit_sv_enabled "$1"; then
+        ENABLED_STATUS="${C_MAIN}*"
+    elif rc_sv_enabled "$1"; then
+        ENABLED_STATUS="${C_MAIN}*"
+    else
+        ENABLED_STATUS=" "
+    fi
+    printf "${C_OTHER}[$STATUS${C_OTHER}]${C_CLEAR} ${C_OTHER}[$ENABLED_STATUS${C_OTHER}]${C_CLEAR} $1 \n"
 }
 
 runit_sv_up()
 {
-	runit_sv_enabled "$1" && [[ "$(cat @RUNITRUNDIR@/service/$1/supervise/stat 2>/dev/null)" == "run" ]] && [[ -s @RUNITRUNDIR@/service/$1/supervise/pid ]]
+    runit_sv_enabled "$1" && [[ "$(cat @RUNITRUNDIR@/service/$1/supervise/stat 2>/dev/null)" == "run" ]] && [[ -s @RUNITRUNDIR@/service/$1/supervise/pid ]]
 }
 
 enable_runit_sv()
 {
-	ln -sf @RUNITDIR@/sv/"$1" @RUNITRUNDIR@/service/
-	# this will make sure the service is enabled if ./down exists
-	runit_send_signal "u" "$1"
-	ck_status "$1"
+    ln -sf @RUNITDIR@/sv/"$1" @RUNITRUNDIR@/service/
+    # this will make sure the service is enabled if ./down exists
+    runit_send_signal "u" "$1"
+    ck_status "$1"
 }
 
 disable_runit_sv()
 {
-	rm -f @RUNITRUNDIR@/service/"$1"
-	msg_ok "$1: disabled"
+    rm -f @RUNITRUNDIR@/service/"$1"
+    msg_ok "$1: disabled"
 }
 
 enable_rc_sv()
 {
-	ln -sf @RCSVDIR@/"$1" @RCENABLEDDIR@/
-	@RCENABLEDDIR@/"$1"/up
+    ln -sf @RCSVDIR@/"$1" @RCENABLEDDIR@/
+    @RCENABLEDDIR@/"$1"/up
 }
 
 disable_rc_sv()
 {
-	[ -x @RCENABLEDDIR@/"$1"/down ] && @RCENABLEDDIR@/"$1"/down
-	rm -f @RCENABLEDDIR@/"$1"
+    [ -x @RCENABLEDDIR@/"$1"/down ] && @RCENABLEDDIR@/"$1"/down
+    rm -f @RCENABLEDDIR@/"$1"
 }
 
 list_rc_services() {
-	echo "rc services: "
-	cd @RCSVDIR@ || msg_error "error!"
-	for d in *; do
-		have_service "$d" && daemons+=("$d")
-		service_status "$d"
-	done
+    echo "rc services: "
+    cd @RCSVDIR@ || msg_error "error!"
+    for d in *; do
+        have_service "$d" && daemons+=("$d")
+        service_status "$d"
+    done
 }
 
 list_runit_services() {
-	echo "runit services: "
-	cd @RUNITDIR@/sv || return
-	for daemon in *; do
-		service_status "$daemon"
-	done
+    echo "runit services: "
+    cd @RUNITDIR@/sv || return
+    for daemon in *; do
+        service_status "$daemon"
+    done
 }
 
 runit_send_signal() {
-	if runit_sv_enabled "$2"; then
-		for i in {1..7}; do
-			sleep 0.1
-			if [[ -e @RUNITRUNDIR@/service/$2/supervise/control ]]; then
-				printf "%s" "$1" > "@RUNITRUNDIR@/service/$2/supervise/control"
-				break
-			else
-				sleep 1
-			fi
-		done
-	else
-		ck_status "$2"
-		return 100
-	fi
+    if runit_sv_enabled "$2"; then
+        for i in {1..7}; do
+            sleep 0.1
+            if [[ -e @RUNITRUNDIR@/service/$2/supervise/control ]]; then
+                printf "%s" "$1" > "@RUNITRUNDIR@/service/$2/supervise/control"
+                break
+            else
+                sleep 1
+            fi
+        done
+    else
+        ck_status "$2"
+        return 100
+    fi
 }
 
 have_service()
 {
-	[[ -x @RCSVDIR@/$1 ]]
+    [[ -x @RCSVDIR@/$1 ]]
 }
 
 ### Long functions to be run in stages
@@ -280,7 +280,7 @@ cgroup1_controllers(){
     ${HAVE_CONTROLLER1_GROUPS} && [ -e /proc/cgroups ]  && grep -qw cgroup /proc/filesystems || return 0
     while read -r name _ _ enabled _; do
         case "${enabled}" in
-            1)	if mountpoint -q "/sys/fs/cgroup/${name}";then continue;fi
+            1)    if mountpoint -q "/sys/fs/cgroup/${name}";then continue;fi
                 local x
                 for x in $CGROUP_CONTROLLERS; do
                     [ "${name}" = "blkio" ] && [ "${x}" = "io" ] &&
@@ -358,123 +358,123 @@ mount_cgs(){
 }
 
 do_unlock_device() {
-	# $1 = requested name
-	# $2 = source device
-	# $3 = password
-	# $4 = options
-	local open=create a=$1 b=$2 failed=0 opts
-	# Ordering of options is different if you are using LUKS vs. not.
-	# Use ugly swizzling to deal with it.
-	# isLuks only gives an exit code but no output to stdout or stderr.
-	if cryptsetup isLuks "$2" 2>/dev/null; then
-		open=luksOpen
-		a=$2
-		b=$1
-	else
-		printhl "Non-LUKS partitions are not supported at the moment."
-		continue
-	fi
-	if [[ $4 ]]; then
-		for i in ${4//,/ }; do
-			case $i in
-				"discard") opts+="--allow-discard" ;;
-				"readonly"|"read-only") opts+="--readonly" ;;
-				"tries"*) opts+="-T ${i##*=}" ;;
-				"keyfile-size"*) opts+="-l ${i##*=}" ;;
-				"keyfile-offset"*) opts+="--keyfile-offset ${i##*=}" ;;
-				"key-slot"*) opts+="-S ${i##*=}" ;;
-				"luks") ;;
-				*)
-					printhl "The option is not currently supported at the moment."
-					printhl "Please add an issue to https://github.com/artix-linux/runit-rc"
-					continue
-				;;
-			esac
-		done
-	fi
-	case $3 in
-		/dev*)
-			local ckdev=${3%%:*}
-			local cka=${3#*:}
-			local ckb=${cka#*:}
-			local cka=${cka%:*}
-			local ckfile=/dev/ckfile
-			local ckdir=/dev/ckdir
-			case ${cka} in
-				*[!0-9]*)
-					# Use a file on the device
-					# cka is not numeric: cka=filesystem, ckb=path
-					mkdir ${ckdir}
-					mount -r -t ${cka} ${ckdev} ${ckdir}
-					dd if=${ckdir}/${ckb} of=${ckfile} >/dev/null 2>&1
-					umount ${ckdir}
-					rmdir ${ckdir};;
-				*)
-					# Read raw data from the block device
-					# cka is numeric: cka=offset, ckb=length
-					dd if=${ckdev} of=${ckfile} bs=1 skip=${cka} count=${ckb} >/dev/null 2>&1;;
-			esac
-			cryptsetup -d ${ckfile} $opts $open "$a" "$b" >/dev/null
-			dd if=/dev/urandom of=${ckfile} bs=1 count=$(stat -c %s ${ckfile}) conv=notrunc >/dev/null 2>&1
-			rm ${ckfile};;
-		/*)
-			cryptsetup -d "$3" $opts $open "$a" "$b" >/dev/null;;
-		"none" | "")
-			cryptsetup $opts $open "$a" "$b" >/dev/null;;
-	esac
-	return $?
+    # $1 = requested name
+    # $2 = source device
+    # $3 = password
+    # $4 = options
+    local open=create a=$1 b=$2 failed=0 opts
+    # Ordering of options is different if you are using LUKS vs. not.
+    # Use ugly swizzling to deal with it.
+    # isLuks only gives an exit code but no output to stdout or stderr.
+    if cryptsetup isLuks "$2" 2>/dev/null; then
+        open=luksOpen
+        a=$2
+        b=$1
+    else
+        printhl "Non-LUKS partitions are not supported at the moment."
+        continue
+    fi
+    if [[ $4 ]]; then
+        for i in ${4//,/ }; do
+            case $i in
+                "discard") opts+="--allow-discard" ;;
+                "readonly"|"read-only") opts+="--readonly" ;;
+                "tries"*) opts+="-T ${i##*=}" ;;
+                "keyfile-size"*) opts+="-l ${i##*=}" ;;
+                "keyfile-offset"*) opts+="--keyfile-offset ${i##*=}" ;;
+                "key-slot"*) opts+="-S ${i##*=}" ;;
+                "luks") ;;
+                *)
+                    printhl "The option is not currently supported at the moment."
+                    printhl "Please add an issue to https://github.com/artix-linux/runit-rc"
+                    continue
+                ;;
+            esac
+        done
+    fi
+    case $3 in
+        /dev*)
+            local ckdev=${3%%:*}
+            local cka=${3#*:}
+            local ckb=${cka#*:}
+            local cka=${cka%:*}
+            local ckfile=/dev/ckfile
+            local ckdir=/dev/ckdir
+            case ${cka} in
+                *[!0-9]*)
+                    # Use a file on the device
+                    # cka is not numeric: cka=filesystem, ckb=path
+                    mkdir ${ckdir}
+                    mount -r -t ${cka} ${ckdev} ${ckdir}
+                    dd if=${ckdir}/${ckb} of=${ckfile} >/dev/null 2>&1
+                    umount ${ckdir}
+                    rmdir ${ckdir};;
+                *)
+                    # Read raw data from the block device
+                    # cka is numeric: cka=offset, ckb=length
+                    dd if=${ckdev} of=${ckfile} bs=1 skip=${cka} count=${ckb} >/dev/null 2>&1;;
+            esac
+            cryptsetup -d ${ckfile} $opts $open "$a" "$b" >/dev/null
+            dd if=/dev/urandom of=${ckfile} bs=1 count=$(stat -c %s ${ckfile}) conv=notrunc >/dev/null 2>&1
+            rm ${ckfile};;
+        /*)
+            cryptsetup -d "$3" $opts $open "$a" "$b" >/dev/null;;
+        "none" | "")
+            cryptsetup $opts $open "$a" "$b" >/dev/null;;
+    esac
+    return $?
 }
 
 do_unlock() {
-	local name=$1 device=$2 password=$3 options=$4
+    local name=$1 device=$2 password=$3 options=$4
 
-	printf "${C_MAIN}Unlocking $1${C_CLEAR}\n"
+    printf "${C_MAIN}Unlocking $1${C_CLEAR}\n"
 
-	if [[ ${options:0:2} =~ -. ]]; then
-		do_unlock_device "$name" "$device" "$password" "$options"
-		return $?
-	fi
+    if [[ ${options:0:2} =~ -. ]]; then
+        do_unlock_device "$name" "$device" "$password" "$options"
+        return $?
+    fi
 
-	do_unlock_device "$name" "$device" "$password" "$options"
-	failed=$?
-	if (( $failed )); then
-		printf "${C_FAIL}Unlocking of $1 failed.${C_CLEAR}\n"
-	fi
-	return $?
+    do_unlock_device "$name" "$device" "$password" "$options"
+    failed=$?
+    if (( $failed )); then
+        printf "${C_FAIL}Unlocking of $1 failed.${C_CLEAR}\n"
+    fi
+    return $?
 }
 
 do_lock() {
-	#status "Detaching encrypted device ${1}"
-	cryptsetup luksClose "$1" >/dev/null
+    #status "Detaching encrypted device ${1}"
+    cryptsetup luksClose "$1" >/dev/null
 }
 
 read_crypttab() {
-	# $1 = function to call with the split out line from the crypttab
-	local line nspo failed=0
-	while read line <&3; do
-		[[ $line && $line != '#'* ]] || continue
-		eval nspo=("${line%#*}")
-		if $1 "${nspo[0]}" "${nspo[1]}" "${nspo[2]}" "${nspo[*]:3}"; then
-			crypto_unlocked=1
-		else
-			failed=1
-		fi
-	done 3< /etc/crypttab
-	return $failed
+    # $1 = function to call with the split out line from the crypttab
+    local line nspo failed=0
+    while read line <&3; do
+        [[ $line && $line != '#'* ]] || continue
+        eval nspo=("${line%#*}")
+        if $1 "${nspo[0]}" "${nspo[1]}" "${nspo[2]}" "${nspo[*]:3}"; then
+            crypto_unlocked=1
+        else
+            failed=1
+        fi
+    done 3< /etc/crypttab
+    return $failed
 }
 
 ### End
 
 run_rc_command()
 {
-	eval "$1"
+    eval "$1"
 }
 
 emergency_shell()
 {
-	msg_error "Cannot continue due to errors above, starting emergency shell."
-	msg "When ready, type exit or Control+D to continue booting."
-	sulogin -p
+    msg_error "Cannot continue due to errors above, starting emergency shell."
+    msg "When ready, type exit or Control+D to continue booting."
+    sulogin -p
 }
 
 deltext() {
@@ -490,28 +490,28 @@ printsep() {
 }
 
 msg() {
-	printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
+    printf "${C_OTHER}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
 msg_ok() {
-	printf "${C_DONE}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
+    printf "${C_DONE}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
 msg_warn() {
-	printf "${C_WARN}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
+    printf "${C_WARN}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
 msg_error() {
-	printf "${C_FAIL}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
+    printf "${C_FAIL}${PREFIX_REG} ${C_MAIN}${1}${C_CLEAR}\n"
 }
 
 add_daemon() {
-	[[ -d @RCRUNDIR@/active ]] || mkdir -p @RCRUNDIR@/active
-	touch @RCRUNDIR@/active/"$1"
+    [[ -d @RCRUNDIR@/active ]] || mkdir -p @RCRUNDIR@/active
+    touch @RCRUNDIR@/active/"$1"
 }
 
 rm_daemon() {
-	rm -f @RCRUNDIR@/active/"$1"
+    rm -f @RCRUNDIR@/active/"$1"
 }
 
 #  usage : in_array( $needle, $haystack )
@@ -550,7 +550,7 @@ run_sysinit(){
     calc_columns
 
     for stage1 in @RCLIBDIR@/stage1/*; do
-		[[ -x $stage1 && -r $stage1 ]] && . $stage1
+        [[ -x $stage1 && -r $stage1 ]] && . $stage1
     done
 }
 
@@ -558,30 +558,30 @@ run_shutdown(){
     print_leave
 
     for stage3 in @RCLIBDIR@/stage3/*; do
-		[[ -x $stage3 && -r $stage3 ]] && . $stage3
+        [[ -x $stage3 && -r $stage3 ]] && . $stage3
     done
 }
 
 run_oneshot_services()
 {
-	for files in @RCENABLEDDIR@/*; do
-		$files start
-	done
+    for files in @RCENABLEDDIR@/*; do
+        $files/up
+    done
 }
 
 stop_oneshot_services()
 {
-	for files in @RCENABLEDDIR@/*; do
-		$files stop
-	done
+    for files in @RCENABLEDDIR@/*; do
+        $files/down
+    done
 }
 
 # if [[ $1 == "start" ]]; then
-# 	if [[ $STARTING ]]; then
-# 		echo "A daemon is starting another daemon; this is unlikely to work as intended."
-# 	else
-# 		export STARTING=1
-# 	fi
+#     if [[ $STARTING ]]; then
+#         echo "A daemon is starting another daemon; this is unlikely to work as intended."
+#     else
+#         export STARTING=1
+#     fi
 # fi
 
 calc_columns
