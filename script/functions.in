@@ -138,12 +138,14 @@ enable_rc_sv()
 {
     ln -sf @RCSVDIR@/"$1" @RCENABLEDDIR@/
     @RCENABLEDDIR@/"$1"/up
+    [[ $? == 0 ]] && add_daemon "$1"
 }
 
 disable_rc_sv()
 {
     [ -x @RCENABLEDDIR@/"$1"/down ] && @RCENABLEDDIR@/"$1"/down
     rm -f @RCENABLEDDIR@/"$1"
+    [[ $? == 0 ]] && rm_daemon "$1"
 }
 
 list_rc_services() {

@@ -59,10 +59,8 @@ case "$1" in
 			@RCENABLEDDIR@/"$2"/up
 			ret=$?
 			(( ret == 0 )) && add_daemon "$2"
-			ck_status "$2"
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"stop")
@@ -82,23 +80,19 @@ case "$1" in
 		elif rc_sv_enabled "$2"; then
 			[ -x @RCENABLEDDIR@/"$2"/down ] && @RCENABLEDDIR@/"$2"/down
 			(( ret == 0 )) && rm_daemon "$2"
-			ck_status "$2"
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"reload")
 		if runit_sv_enabled "$2"; then
 			runit_send_signal "h" "$2"
-			ck_status "$2"
 		elif rc_sv_enabled "$2"; then
 			[ -x @RCENABLEDDIR@/"$2"/down ] && @RCENABLEDDIR@/"$2"/down
 			sleep 1
 			@RCENABLEDDIR@/"$2"/up
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"restart")
@@ -124,9 +118,8 @@ case "$1" in
 			((check_fail > 0)) && msg_warn "$2: check failed!"
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"shutdown")
@@ -143,9 +136,8 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"force-stop")
@@ -162,9 +154,8 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && runit_send_signal "k" "$2" || exit 0
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"force-reload")
@@ -182,9 +173,8 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && runit_send_signal "k" "$2" || exit 0
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"force-restart")
@@ -210,9 +200,8 @@ case "$1" in
 			((check_fail > 0)) && msg_warn "$2: check failed!"
 			ck_status "$2"
 			((i == 7)) && runit_send_signal "k" "$2" || exit 0
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"force-shutdown")
@@ -229,9 +218,8 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && runit_send_signal "k" "$2" || exit 0
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"try-restart")
@@ -249,9 +237,8 @@ case "$1" in
 			done
 			ck_status "$2"
 			((i == 7)) && exit 1 || exit 0
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"enable")
@@ -261,9 +248,8 @@ case "$1" in
 			enable_runit_sv "$2"
 		elif rc_sv_available "$2"; then
 			enable_rc_sv "$2"
-		else
-			ck_status "$2"
 		fi
+	ck_status "$2"
 	;;
 
 	"disable")
@@ -273,9 +259,8 @@ case "$1" in
 			disable_rc_sv "$2"
 		elif runit_sv_available "$2" || rc_sv_available "$2"; then
 			msg_error "$2: runit/rc service is already disabled"
-		else
-			ck_status "$2"
 		fi
+		ck_status "$2"
 	;;
 
 	"")
