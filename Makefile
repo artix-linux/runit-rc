@@ -162,7 +162,7 @@ install-rc:
 	$(LN) $(RCSVDIR)/random-seed $(DESTDIR)$(RCDIR)/shutdown/10-random-seed
 	$(LN) $(RCSVDIR)/cleanup $(DESTDIR)$(RCDIR)/shutdown/20-cleanup
 	$(LN) $(RCSVDIR)/udev $(DESTDIR)$(RCDIR)/shutdown/30-udev
-	$(LN) $(RCSVDIR)/hwclock $(DESTDIR)$(RCDIR)/sysinit/35-hwclock
+	$(LN) $(RCSVDIR)/hwclock $(DESTDIR)$(RCDIR)/shutdown/35-hwclock
 	$(LN) $(RCSVDIR)/misc $(DESTDIR)$(RCDIR)/shutdown/40-misc
 	$(LN) $(RCSVDIR)/swap $(DESTDIR)$(RCDIR)/shutdown/50-swap
 	$(LN) $(RCSVDIR)/root $(DESTDIR)$(RCDIR)/shutdown/60-root
