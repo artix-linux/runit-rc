@@ -2,25 +2,24 @@
 
 . @RCLIBDIR@/functions
 
-HWCLOCK_PARAMS="--systz"
 HARDWARECLOCK=${HARDWARECLOCK:-UTC}
 
 case $HARDWARECLOCK in
-    UTC) HWCLOCK_PARAMS+=" --utc --noadjfile" ;;
-    localtime) HWCLOCK_PARAMS+=" --localtime --noadjfile" ;;
+    UTC) HWCLOCK_PARAMS+=" --utc" ;;
+    localtime) HWCLOCK_PARAMS+=" --localtime" ;;
     *) HWCLOCK_PARAMS="";;
 esac
 
 case "$1" in
     start)
         stat_busy "Adjusting hwclock"
-        hwclock $HWCLOCK_PARAMS || stat_die
+        hwclock --systz $HWCLOCK_PARAMS --noadjtime || stat_die
         add_daemon hwclock
         stat_done
         ;;
     stop)
         stat_busy "Adjusting hwclock"
-        hwclock --adjust $HWCLOCK_PARAMS || stat_die
+        hwclock --systohc $HWCLOCK_PARAMS || stat_die
         rm_daemon hwclock
         stat_done
         ;;
