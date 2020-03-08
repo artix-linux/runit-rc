@@ -10,7 +10,7 @@ mount_binfmt(){
     for path in /usr/lib/binfmt.d /etc/binfmt.d /run/binfmt.d; do
         [[ ! -d $path ]] && continue
         [[ -z "$(ls $path)" ]] && continue
-        grep "^:" $path/* | \
+        grep -h "^:" $path/* | \
             while read -r line; do
                 printf "%s" "$line" > /proc/sys/fs/binfmt_misc/register || return 1
             done
