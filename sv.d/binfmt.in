@@ -7,6 +7,12 @@ mount_binfmt(){
     mountpoint -q /proc/sys/fs/binfmt_misc || \
     mount -t binfmt_misc binfmt /proc/sys/fs/binfmt_misc || return 1
 
+    for files in /proc/sys/fs/binfmt_misc/*; do
+        [ "$files" = /proc/sys/fs/binfmt_misc/register ] && continue
+        [ "$files" = /proc/sys/fs/binfmt_misc/status ]   && continue
+        echo -1 > "$files"
+    done
+
     for path in /usr/lib/binfmt.d /etc/binfmt.d /run/binfmt.d; do
         [[ ! -d $path ]] && continue
         [[ -z "$(ls $path)" ]] && continue
@@ -27,8 +33,13 @@ case "$1" in
         add_daemon binfmt
         stat_done binfmt
         ;;
+    once)
+        stat_busy "Running binfmt"
+        mount_binfmt || stat_die binfmt
+        stat_done
+        ;;
     *)
-        echo "usage: $0 {start}"
+        echo "usage: $0 {start|once}"
         exit 1
         ;;
 esac
