@@ -1,6 +1,7 @@
 #!/bin/bash
 
 . @RCLIBDIR@/functions
+. @RCDIR@/rc.conf
 
 HARDWARECLOCK=${HARDWARECLOCK:-UTC}
 
