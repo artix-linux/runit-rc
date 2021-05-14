@@ -2,6 +2,7 @@
 
 # sourcing our current rc.conf requires this to be a bash script
 . @RCLIBDIR@/functions
+. @RCDIR@/rc.conf
 
 cleaning(){
     install -m0664 -o root -g utmp /dev/null /run/utmp
@@ -13,6 +14,8 @@ cleaning(){
     fi
 
     rm -f /etc/nologin /forcefsck /forcequotacheck /fastboot
+
+    [ "$CLEANTMP" = y ] && rm -rf /tmp/*
 }
 
 case "$1" in
